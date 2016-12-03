@@ -1,4 +1,4 @@
-#Kidaptive ALP Springroll Plugin
+#Kidaptive ALP SpringRoll Plugin
 
 ##Installation
 `bower install springroll-kidaptive-plugin`
@@ -32,7 +32,7 @@ var app = new Application({
 ```
 
 ####config.json
-If learning module is included, application config must contain a mapping from Springroll game IDs to ALP game URIs.
+If learning module is included, application config must contain a mapping from SpringRoll game IDs to ALP game URIs.
 ```json
 {
     "gameIdMap": {
@@ -42,7 +42,7 @@ If learning module is included, application config must contain a mapping from S
 ```
 
 ####User and Learner Management
-This section is only relevant until user/learner management has been integrated into Springroll.
+This section is only relevant until user/learner management has been integrated into SpringRoll.
 
 #####Creating a user
 `nickname` is optional.
@@ -104,7 +104,7 @@ app.alp.getLearnerList();
 ```
 
 ####Reporting Behavior
-All learningEvents reported through the learning plugin will also automatically be reported to ALP as behavior event. Additionally, behavior events can also be reported using the alp component directly. All properties in the second parameter are optional. `duration` is in seconds. `additionalFields` and `tags` are key-value pairs of strings.
+All learningEvents reported through the learning plugin will also automatically be reported to ALP as behavior event. Additionally, behavior events can also be reported using the `app.alp` component directly. All properties in the second parameter are optional. `duration` is in seconds. `additionalFields` and `tags` are key-value pairs of strings.
 ```javascript
 app.alp.reportBehavior(eventName, {learnerId:number, gameUri:string, promptUri:string, duration:number, additionalFields:{}, tags:{}})
 ```
