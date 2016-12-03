@@ -1,0 +1,28 @@
+{
+  "name": "springroll-kidaptive-plugin",
+  "version": "0.1.0",
+  "description": "Springroll plugin for Kidaptive ALP",
+  "main": "./dist/kidaptive_alp_plugin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:debug": "cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
+    "build:prod": "uglifyjs src/js/main/KidaptiveAlpPlugin.js > dist/kidaptive_alp_plugin.min.js",
+    "build": "npm run build:debug; npm run build:prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Kidapt/springroll-kidaptive-plugin.git"
+  },
+  "keywords": [
+    "springroll",
+    "kidaptive",
+    "alp",
+    "plugin"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Kidapt/springroll-kidaptive-plugin/issues"
+  },
+  "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin#readme"
+}

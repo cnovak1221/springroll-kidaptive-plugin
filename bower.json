@@ -1,0 +1,29 @@
+{
+  "name": "springroll-kidaptive-plugin",
+  "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin",
+  "authors": [
+    "Solomon Liu <sliu198@gmail.com>"
+  ],
+  "description": "Springroll plugin for Kidaptive ALP",
+  "main": "./dist/kidaptive_alp_plugin.js",
+  "keywords": [
+    "springroll",
+    "plugin",
+    "kidaptive",
+    "alp"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "*.json",
+    "src"
+  ],
+  "dependencies": {
+    "springroll-pbskids": "https://projects.pbs.org/bitbucket/scm/sd/springroll-pbskids.git",
+    "kidaptive-sdk-js": "^0.1.1"
+  }
+}
