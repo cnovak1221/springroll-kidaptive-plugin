@@ -115,7 +115,23 @@ app.alp.reportBehavior(eventName, {learnerId:number, gameUri:string, promptUri:s
 ```
 
 ###Reporting Evidence
-Used for reporting measurable outcomes. All properties in the last parameter are optional. `outcome` is a number between 0 and 1.
+
+####Trials
+Trials are used to control the weight of prior information when calculating learner ability estimates. Starting a new trial
+indicates that the learner's current ability may have changed and that the estimate may not be accurate.
+This causes new evidence to be weighted more to adjust to the new ability.
+Trials starts and ends generally correspond to game starts and ends, but we defer to the developer to decide the trial boundaries
+```javascript
+//starts a trial. closes previous trial for this learner
+app.alp.startTrial(learnerId);
+
+//ends a trial
+app.alp.closeTrial(learnerId);
+```
+
+####Evidence
+Used for reporting measurable outcomes. A trial must be open for the specified learner before reporting evidence.
+ All properties in the last parameter are optional. `outcome` is a number between 0 and 1.
 `duration` is in seconds. `promptAnswers`, `additionalFields`, and `tags` are key-value pairs of strings.
 ```javascript
 var attempts = [];
