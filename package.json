@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:debug": "cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
     "build:prod": "uglifyjs src/js/main/KidaptiveAlpPlugin.js > dist/kidaptive_alp_plugin.min.js",
-    "build": "npm run build:debug; npm run build:prod"
+    "build": "npm run build:debug; npm run build:prod",
+    "version": "npm run build && git add -A dist",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
