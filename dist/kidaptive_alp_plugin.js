@@ -6,7 +6,7 @@
     var plugin = new springroll.ApplicationPlugin();
 
     plugin.preload = function(done) {
-        KidaptiveSdk.init(this.options.alp.appSecret, this.options.alp.version).then(function(sdk) {
+        KidaptiveSdk.init(this.options.alp.appSecret, this.options.alp.version, this.options.alp.apiJsonUrl).then(function(sdk) {
             this.alp = sdk;
             //if Learning Module exists, turn learningEvents into behavior events
             if (this.learning) {
