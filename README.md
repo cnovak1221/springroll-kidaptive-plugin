@@ -26,22 +26,13 @@ var app = new Application({
         version:{
             version:"APP_VERSION",
             build:"APP_BUILD"
-        }
+        },
+        gameUri:"GAME_URI"
     }
 });
 ```
 
-####config.json
-If learning module is included, application config must contain a mapping from SpringRoll game IDs to ALP game URIs.
-```json
-{
-    "gameIdMap": {
-        "SPRINGROLL_GAME_ID":"ALP_GAME_URI"
-    }
-}
-```
-
-`app.alp` will be a reference to a [KidaptiveSDK](https://github.com/Kidapt/kidaptive-sdk-js/wiki/API-Reference#kidaptivesdk-interface) object.
+`app.alpPlugin.sdk` will be a reference to a [KidaptiveSDK](https://github.com/Kidapt/kidaptive-sdk-js/wiki/API-Reference#kidaptivesdk-interface) object.
 Below is a summary of common tasks in the alp module. Full SDK documentation can be found [here](https://github.com/Kidapt/kidaptive-sdk-js/wiki).
 
 ###User and Learner Management
@@ -50,14 +41,14 @@ This section is only relevant until user/learner management has been integrated 
 ####Creating a user
 `nickname` is optional.
 ```javascript
-app.alp.createUser(email, password, nickname).then(function(user) {
+app.alpPlugin.sdk.createUser(email, password, nickname).then(function(user) {
     //success callback
 });
 ```
 
 ####Login user
 ```javascript
-app.alp.loginUser(email, password).then(function(user) {
+app.alpPlugin.sdk.loginUser(email, password).then(function(user) {
     //success callback
 });
 ```
@@ -65,14 +56,14 @@ app.alp.loginUser(email, password).then(function(user) {
 ####Modify user
 Both properties in the input Object are optional. Only included properties will be changed.
 ```javascript
-app.alp.updateUser({nickname:string, password:string}).then(function(user) {
+app.alpPlugin.sdk.updateUser({nickname:string, password:string}).then(function(user) {
     //success callback
 });
 ```
 
 ####Delete current user
 ```javascript
-app.alp.deleteUser().then(function(user) {
+app.alpPlugin.sdk.deleteUser().then(function(user) {
     //success callback
 });
 ```
@@ -80,7 +71,7 @@ app.alp.deleteUser().then(function(user) {
 ####Creating a learner
 `birthday` and `gender` are optional. `birthday` is a JS Date object. `gender` can be `"male"`, `"female"`, or `"decline"` and defaults to `"decline"`
 ```javascript
-app.alp.createLearner(name, birthday, gender).then(function(learner) {
+app.alpPlugin.sdk.createLearner(name, birthday, gender).then(function(learner) {
     //success callback
 });
 ```
@@ -88,14 +79,14 @@ app.alp.createLearner(name, birthday, gender).then(function(learner) {
 ####Modifying a learner
 All properties in the second parameter are optional. Only included parameters will be changed.
 ```javascript
-app.alp.updateLearner(learnerId, {name:string, birthday:Date, gender:string}).then(function(learner) {
+app.alpPlugin.sdk.updateLearner(learnerId, {name:string, birthday:Date, gender:string}).then(function(learner) {
     //success callback
 });
 ```
 
 ####Deleting a learner
 ```javascript
-app.alp.deleteLearner(learnerId).then(function(learner) {
+app.alpPlugin.sdk.deleteLearner(learnerId).then(function(learner) {
     //success callback
 });
 ```
@@ -103,15 +94,15 @@ app.alp.deleteLearner(learnerId).then(function(learner) {
 
 ####List learners
 ```javascript
-app.alp.getLearnerList();
+app.alpPlugin.sdk.getLearnerList();
 ```
 
 ###Reporting Behavior
 All learningEvents reported through the learning plugin will also automatically be reported to ALP as behavior event.
-Additionally, behavior events can also be reported using the `app.alp` component directly. All properties in the second parameter are optional.
+Additionally, behavior events can also be reported using the `app.alpPlugin.sdk` component directly. All properties in the second parameter are optional.
 `duration` is in seconds. `additionalFields` and `tags` are key-value pairs of strings.
 ```javascript
-app.alp.reportBehavior(eventName, {learnerId:number, gameUri:string, promptUri:string, duration:number, additionalFields:{}, tags:{}})
+app.alpPlugin.sdk.reportBehavior(eventName, {learnerId:number, gameUri:string, promptUri:string, duration:number, additionalFields:{}, tags:{}})
 ```
 
 ###Reporting Evidence
@@ -123,10 +114,10 @@ This causes new evidence to be weighted more to adjust to the new ability.
 Trials starts and ends generally correspond to game starts and ends, but we defer to the developer to decide the trial boundaries
 ```javascript
 //starts a trial. closes previous trial for this learner
-app.alp.startTrial(learnerId);
+app.alpPlugin.sdk.startTrial(learnerId);
 
 //ends a trial
-app.alp.closeTrial(learnerId);
+app.alpPlugin.sdk.closeTrial(learnerId);
 ```
 
 ####Evidence
@@ -139,13 +130,13 @@ attempts.push({
     itemURI:string,
     outcome:number
 });
-app.alp.reportEvidence(eventName, learnerId, promptUri, attempts, {duration:number, promptAnswers:{}, additionalFields:{}, tags:{}});
+app.alpPlugin.sdk.reportEvidence(eventName, learnerId, promptUri, attempts, {duration:number, promptAnswers:{}, additionalFields:{}, tags:{}});
 ```
 
 ###Prompt Recommendations
 `localDimensionUri`, `numResults`, and `successProbability` are optional. `numResults` defaults to 10. `successProbability` defaults to 0.7.
 ```javascript
-var recs = app.alp.recommendOptimalDifficultyPrompts(learnerId, gameUri, localDimensionUri, numResults, successProbability);
-recs = app.alp.recommendRandomPrompts(gameUri,localDimensionUri, numResults);
+var recs = app.alpPlugin.sdk.recommendOptimalDifficultyPrompts(learnerId, gameUri, localDimensionUri, numResults, successProbability);
+recs = app.alpPlugin.sdk.recommendRandomPrompts(gameUri,localDimensionUri, numResults);
 //recs.recommendations contains a list of up to numResults promptUris
 ```
