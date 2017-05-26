@@ -18,9 +18,13 @@
                     var additionalFields = JSON.parse(JSON.stringify(data.event_data));
                     var args = {additionalFields: additionalFields};
                     args.gameUri = this.options.alp.gameUri;
-                    if (additionalFields.duration) {
-                        args.duration = additionalFields.duration / 1000; //learningEvents report duration in milliseconds
-                        delete additionalFields["duration"];
+                    for (var k in additionalFields) {
+                        if (k == 'duration' && typeof(additionalFields[k]) === 'number') {
+                            args[k] = additionalFields[k] / 1000; //learningEvents report duration in milliseconds
+                            delete additionalFields[k];
+                        } else if (additionalFields[k] instanceof Object) {
+                            additionalFields[k] = JSON.stringify(additionalFields[k]); //turn nested objects into json
+                        }
                     }
                     additionalFields.game_id = data.game_id;
                     additionalFields.event_id = data.event_id;
