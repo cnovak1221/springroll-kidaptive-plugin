@@ -14,9 +14,9 @@
         var defaultRecType = this.options.alp.defaultRecType;
         var defaultRecParams = this.options.alp.defaultRecParams;
         var defaultRecCallback = this.options.alp.defaultRecCallback;
-        var gameUri = this.options.alp.gameUri;
+        var gameUri = this.options.alp.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
         var eventOverride = this.options.alp.eventOverride;
-        var specDict = this.config.specDictionary;
+        var specDict = this.config.specDictionary || {};
         KidaptiveSdk.init(this.options.alp.appSecret, this.options.alp.version).then(function(sdk) {
             this.alpPlugin.sdk = sdk;
 
@@ -48,11 +48,13 @@
 
             //if Learning Module exists, turn learningEvents into behavior events
             if (this.learning) {
+                //the default event converter
                 var pluginDefault = function(data) {
                     if (!sdk.getCurrentUser()) {
                         return;
                     }
-                    var eventName = specDict[data.event_data.event_code];
+                    //
+                    var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
                     var additionalFields = JSON.parse(JSON.stringify(data.event_data));
                     var args = {additionalFields: additionalFields};
                     args.gameUri = gameUri;
@@ -64,8 +66,8 @@
                             additionalFields[k] = JSON.stringify(additionalFields[k]); //turn nested objects into json
                         }
                     }
-                    additionalFields.game_id = data.game_id;
-                    additionalFields.event_id = data.event_id;
+                    additionalFields.springroll_game_id = data.game_id;
+                    additionalFields.springroll_event_id = data.event_id;
                     sdk.reportBehavior(eventName,args);
                 };
                 var override = eventOverride || pluginDefault;

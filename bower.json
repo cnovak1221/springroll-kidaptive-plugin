@@ -24,6 +24,6 @@
   ],
   "dependencies": {
     "springroll-pbskids": "https://projects.pbs.org/bitbucket/scm/sd/springroll-pbskids.git",
-    "kidaptive-sdk-js": "^0.1.1"
+    "kidaptive-sdk-js": "^0.1.9"
   }
 }

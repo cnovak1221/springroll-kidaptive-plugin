@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/Kidapt/springroll-kidaptive-plugin/issues"
   },
-  "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin#readme"
+  "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin#readme",
+  "devDependencies": {
+    "uglifyjs": "^2.4.11"
+  }
 }
