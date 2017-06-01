@@ -7,13 +7,13 @@
 
     //cascading dynamic value resolver.
     var resolveValue = function(value, context) {
-        return (value instanceof Function && value.apply(undefined, context)) || value;
+        return (value instanceof Function && value(context)) || value;
     };
 
     plugin.preload = function(done) {
-        var defaultRecType = this.options.alp.defaultRecType;
-        var defaultRecParams = this.options.alp.defaultRecParams;
-        var defaultRecCallback = this.options.alp.defaultRecCallback;
+        var recType = this.options.alp.recType;
+        var recParams = this.options.alp.recParams;
+        var recCallback = this.options.alp.recCallback;
         var gameUri = this.options.alp.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
         var eventOverride = this.options.alp.eventOverride;
         var specDict = this.learning.catalog.events || {};
@@ -22,8 +22,8 @@
             this.alpPlugin = {
                 sdk: sdk,
                 getRecommendation: function(context) { //recommendations
-                    var type = resolveValue(defaultRecType, context) || 'optimalDifficulty';
-                    var params = resolveValue(defaultRecParams, context) || {};
+                    var type = JSON.parse(JSON.stringify(resolveValue(recType, context) || 'optimalDifficulty'));
+                    var params = JSON.parse(JSON.stringify(resolveValue(recParams, context) || {}));
                     params.learnerId = sdk.getLearnerList()[0].id;
                     params.gameUri = gameUri;
                     var rec;
@@ -43,7 +43,7 @@
                         default:
                             rec = sdk.provideRecommendation(type, params);
                     }
-                    return defaultRecCallback ? defaultRecCallback(rec, context) : rec;
+                    return recCallback ? recCallback(rec, context) : rec;
                 },
 
                 //functions for getting and setting state information.

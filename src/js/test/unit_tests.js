@@ -10,6 +10,8 @@ var VERSION = {
 
 var CONFIG_PATH = '../../json/test/config.json';
 
+var OTHER_REC = 'OTHER_REC';
+
 var GAME_URI = 'GAME_URI';
 var USER = 'USER';
 var LEARNER_LIST = [{
@@ -18,7 +20,6 @@ var LEARNER_LIST = [{
 
 var app;
 describe("Springroll ALP Plugin Tests", function() {
-    this.timeout(3600000);
     var Application = include("springroll.Application");
     var Learning = include("springroll.pbskids.Learning");
 
@@ -27,8 +28,8 @@ describe("Springroll ALP Plugin Tests", function() {
     var sdkInitStub = sinon.stub(KidaptiveSdk, 'init');
 
     //helper for initializing app and running tests after app init
-    var testWithConfig = function(tests, config) {
-        app = new Application(config || {
+    var testWithOptions = function(tests, options) {
+        app = new Application(options || {
                 configPath: CONFIG_PATH,
                 alp: {
                     apiKey: API_KEY,
@@ -50,7 +51,7 @@ describe("Springroll ALP Plugin Tests", function() {
         app.destroy();
         var wait = function() {
             if (app.alpPlugin) {
-                setTimeout(wait);
+                setTimeout(wait,0);
             } else {
                 for (var m in sdkStub) {
                     sdkStub[m].reset();
@@ -63,7 +64,7 @@ describe("Springroll ALP Plugin Tests", function() {
     });
 
     it("initialization", function(done) {
-        testWithConfig(function() {
+        testWithOptions(function() {
             KidaptiveSdk.init.calledOnce.should.true();
             KidaptiveSdk.init.calledWithExactly(API_KEY, VERSION).should.true();
             app.should.property('alpPlugin');
@@ -76,13 +77,13 @@ describe("Springroll ALP Plugin Tests", function() {
     });
 
     it('teardown', function(done) {
-        testWithConfig(function() {
+        testWithOptions(function() {
             setTimeout(function() {
                 app.destroy();
-            });
+            },0);
             var wait = function() {
                 if (app.alpPlugin) {
-                    setTimeout(wait);
+                    setTimeout(wait,0);
                 } else {
                     sdkStub.flushEvents.calledOnce.should.true();
                     sdkStub.stopAutoFlush.calledOnce.should.true();
@@ -94,14 +95,14 @@ describe("Springroll ALP Plugin Tests", function() {
     });
 
     it("state - initial state", function(done) {
-        testWithConfig(function() {
+        testWithOptions(function() {
             app.alpPlugin.getState().should.Object().empty();
             done();
         });
     });
 
     it('state - immutable return value', function(done) {
-        testWithConfig(function() {
+        testWithOptions(function() {
             var state = app.alpPlugin.getState();
             state['a'] = 'b';
             app.alpPlugin.getState().should.Object().empty();
@@ -110,7 +111,7 @@ describe("Springroll ALP Plugin Tests", function() {
     });
 
     it('state - set state', function(done) {
-        testWithConfig(function() {
+        testWithOptions(function() {
             var state = {'a': 1, 'b': 2};
             var origState = JSON.parse(JSON.stringify(state));
             var addState = {'b': 4, 'd':5};
@@ -126,26 +127,29 @@ describe("Springroll ALP Plugin Tests", function() {
     });
 
     it('default recommendation', function(done) {
-        testWithConfig(function() {
-            app.alpPlugin.getRecommendation();
+        testWithOptions(function() {
+            var rec = {};
+            sdkStub.recommendOptimalDifficultyPrompts.returns(rec);
+
+            app.alpPlugin.getRecommendation().should.equal(rec);
             sdkStub.recommendOptimalDifficultyPrompts.calledOnce.should.true();
-            sdkStub.recommendOptimalDifficultyPrompts.calledWith(LEARNER_LIST[0].id, GAME_URI);
+            sdkStub.recommendOptimalDifficultyPrompts.calledWith(LEARNER_LIST[0].id, GAME_URI).should.true();
             done();
         });
     });
 
     it('default event handling', function(done) {
-        testWithConfig(function() {
-
+        testWithOptions(function() {
             //wait a bit. startGame needs to run first
             setTimeout(function() {
+                sdkStub.reportBehavior.reset();
                 app.on('learningEvent', function() {
-                    sdkStub.reportBehavior.callCount.should.above(0);
+                    sdkStub.reportBehavior.calledOnce.should.true();
 
-                    var call = sdkStub.reportBehavior.lastCall;
+                    var call = sdkStub.reportBehavior.firstCall;
                     call.args[0].should.equal('EVENT_NAME');
 
-                    var eventArgs = call.args[1]
+                    var eventArgs = call.args[1];
                     eventArgs.should.properties({
                         learnerId: 'LEARNER',
                         gameUri: GAME_URI,
@@ -170,6 +174,7 @@ describe("Springroll ALP Plugin Tests", function() {
 
                     done();
                 });
+
                 app.learning.EVENT_NAME(
                     2345, //duration
                     true, //boolean
@@ -178,7 +183,152 @@ describe("Springroll ALP Plugin Tests", function() {
                     [], //array
                     {} //object
                 );
-            });
+            },0);
+        });
+    });
+
+    it('event reporting override', function(done) {
+        var override = sinon.spy();
+        testWithOptions(function() {
+            setTimeout(function() {
+                override.reset();
+                app.on('learningEvent', function(event) {
+                    override.calledOnce.should.true();
+                    override.firstCall.args[0].should.equal(event);
+                    done();
+                });
+                app.learning.EVENT_NAME(
+                    2345, //duration
+                    true, //boolean
+                    3, //number
+                    'asdf', //string
+                    [], //array
+                    {} //object
+                );
+            },0);
+        }, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: API_KEY,
+                version: VERSION,
+                gameUri: GAME_URI,
+                eventOverride: override
+            }
+        });
+    });
+
+    it('rec type static override', function(done){
+        testWithOptions(function() {
+            app.alpPlugin.getRecommendation();
+            sdkStub.provideRecommendation.calledOnce.should.true();
+
+            var call = sdkStub.provideRecommendation.firstCall;
+            call.args[0].should.equal(OTHER_REC);
+            call.args[1].should.properties({gameUri:GAME_URI, learnerId: 'LEARNER'}).size(2);
+            done();
+        }, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: API_KEY,
+                version: VERSION,
+                gameUri: GAME_URI,
+                recType: OTHER_REC
+            }
+        });
+    });
+
+    it('rec type dynamic override', function(done) {
+        var recType = sinon.stub().returns(OTHER_REC);
+        var context = {};
+        testWithOptions(function() {
+            app.alpPlugin.getRecommendation(context);
+            sdkStub.provideRecommendation.calledOnce.should.true();
+            recType.calledOnce.should.true();
+            recType.calledWithExactly(context).should.true();
+
+            var call = sdkStub.provideRecommendation.firstCall;
+            call.args[0].should.equal(OTHER_REC);
+            call.args[1].should.properties({gameUri:GAME_URI, learnerId: 'LEARNER'}).size(2);
+            done();
+        }, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: API_KEY,
+                version: VERSION,
+                gameUri: GAME_URI,
+                recType: recType
+            }
+        });
+    });
+
+    it('rec params static override', function(done) {
+        testWithOptions(function() {
+            app.alpPlugin.getRecommendation();
+            sdkStub.provideRecommendation.calledOnce.should.true();
+
+            var call = sdkStub.provideRecommendation.firstCall;
+            call.args[0].should.equal(OTHER_REC);
+            call.args[1].should.properties({param: 'value', gameUri:GAME_URI, learnerId: 'LEARNER'}).size(3);
+            done();
+        }, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: API_KEY,
+                version: VERSION,
+                gameUri: GAME_URI,
+                recType: OTHER_REC,
+                recParams: {
+                    param: 'value'
+                }
+            }
+        });
+    });
+
+    it('rec params dynamic override', function(done) {
+        var context = {};
+        var override = sinon.stub().returns({param: 'value'});
+        testWithOptions(function() {
+            app.alpPlugin.getRecommendation(context);
+            sdkStub.provideRecommendation.calledOnce.should.true();
+            override.calledOnce.should.true();
+            override.calledWithExactly(context).should.true();
+
+            var call = sdkStub.provideRecommendation.firstCall;
+            call.args[0].should.equal(OTHER_REC);
+            call.args[1].should.properties({param: 'value', gameUri:GAME_URI, learnerId: 'LEARNER'}).size(3);
+            done();
+        }, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: API_KEY,
+                version: VERSION,
+                gameUri: GAME_URI,
+                recType: OTHER_REC,
+                recParams: override
+            }
+        });
+    });
+
+    it('rec callback override', function(done) {
+        var context = {};
+        var rawRec = {};
+        var rec = {};
+        sdkStub.recommendOptimalDifficultyPrompts.returns(rawRec);
+        var override = sinon.stub().returns(rec);
+        testWithOptions(function() {
+            app.alpPlugin.getRecommendation(context).should.equal(rec);
+            override.calledOnce.should.true();
+            override.calledWithExactly(rawRec, context).should.true();
+
+            done();
+        }, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: API_KEY,
+                version: VERSION,
+                gameUri: GAME_URI,
+                recCallback: override
+            }
         });
     });
 });
