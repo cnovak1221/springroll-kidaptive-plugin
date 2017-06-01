@@ -4,11 +4,11 @@
   "description": "Springroll plugin for Kidaptive ALP",
   "main": "./dist/kidaptive_alp_plugin.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "bower install",
     "build:debug": "cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
     "build:prod": "uglifyjs src/js/main/KidaptiveAlpPlugin.js > dist/kidaptive_alp_plugin.min.js",
     "build": "npm run build:debug; npm run build:prod",
-    "version": "npm run build && git add -A dist",
+    "version": "npm run build && git add -A",
     "postversion": "git push && git push --tags"
   },
   "repository": {
@@ -28,6 +28,6 @@
   },
   "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin#readme",
   "devDependencies": {
-    "uglifyjs": "^2.4.11"
+    "uglify-js": "^3.0.14"
   }
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unit Tests</title>
+    <link href="../../../bower_components/mocha/mocha.css" rel="stylesheet" />
+    <link href="../../../bower_components/springroll-pbskids/dist/modules/learning.css"  rel="stylesheet" />
+</head>
+<body>
+    <div id="mocha"></div>
+    <script src="../../../bower_components/jquery/dist/jquery.js"></script>
+    <script src="../../../bower_components/mocha/mocha.js"></script>
+    <script src="../../../bower_components/should/should.js"></script>
+    <script src="../../../bower_components/sinon-2.3.2/index.js"></script>
+
+    <script src="../../../bower_components/preloadjs/lib/preloadjs.min.js"></script>
+    <script src="../../../bower_components/springroll/dist/core.min.js"></script>
+    <script src="../../../bower_components/springroll-pbskids/dist/modules/learning.js"></script>
+    <script src="../../../bower_components/kidaptive-sdk-js/dist/kidaptive_sdk.min.js"></script>
+    <script src="../../js/main/KidaptiveAlpPlugin.js"></script>
+
+    <script>
+        mocha.setup('bdd');
+        mocha.checkLeaks();
+    </script>
+
+    <script src="../../js/test/unit_tests.js"></script>
+
+    <script>
+        mocha.run();
+    </script>
+</body>
+</html>

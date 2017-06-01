@@ -1,0 +1,46 @@
+{
+  "spec": {
+    "gameId": "SPRINGROLL_GAME_ID",
+    "version": "1.0",
+    "events": {
+      "1234": {
+        "id": "SPRINGROLL_EVENT_ID",
+        "args": [
+          {
+            "type": "*",
+            "name": "duration"
+          },
+          {
+            "type": "*",
+            "name": "boolean_field"
+          },
+          {
+            "type": "*",
+            "name": "number_field"
+          },
+          {
+            "type": "*",
+            "name": "string_field"
+          },
+          {
+            "type": "*",
+            "name": "array_field"
+          },
+          {
+            "type": "*",
+            "name": "object_field"
+          }
+        ]
+      },
+      "2000": {
+        "id": "SPRINGROLL_START_GAME_EVENT_ID",
+        "args": [
+
+        ]
+      }
+    }
+  },
+  "specDictionary": {
+    "1234": "EVENT_NAME"
+  }
+}
