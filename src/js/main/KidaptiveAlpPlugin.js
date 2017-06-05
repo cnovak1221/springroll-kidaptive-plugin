@@ -5,12 +5,12 @@
     "use strict";
     var plugin = new springroll.ApplicationPlugin();
 
-    //cascading dynamic value resolver.
-    var resolveValue = function(value, context) {
-        return (value instanceof Function && value(context)) || value;
-    };
-
     plugin.preload = function(done) {
+        //cascading dynamic value resolver.
+        var resolveValue = function(value, context) {
+            return (value instanceof Function && value.bind(this)(context)) || value;
+        }.bind(this);
+
         var recType = this.options.alp.recType;
         var recParams = this.options.alp.recParams;
         var recCallback = this.options.alp.recCallback;
@@ -43,8 +43,8 @@
                         default:
                             rec = sdk.provideRecommendation(type, params);
                     }
-                    return recCallback ? recCallback(rec, context) : rec;
-                },
+                    return recCallback ? recCallback.bind(this)(rec, context) : rec;
+                }.bind(this),
 
                 //functions for getting and setting state information.
                 getState: function() {
@@ -71,7 +71,7 @@
                     args.gameUri = gameUri;
                     args.learnerId = sdk.getLearnerList()[0].id;
                     for (var k in additionalFields) {
-                        if (k == 'duration' && typeof(additionalFields[k]) == 'number') {
+                        if (k === 'duration' && typeof(additionalFields[k]) === 'number') {
                             args[k] = additionalFields[k] / 1000; //learningEvents report duration in milliseconds
                             delete additionalFields[k];
                         } else if (additionalFields[k] instanceof Object) {
@@ -88,8 +88,8 @@
                 };
                 var override = eventOverride || pluginDefault;
                 this.learning.on("learningEvent", function(data) {
-                    override(data, pluginDefault);
-                });
+                    override.bind(this)(data, pluginDefault);
+                }.bind(this));
             }
 
             done();

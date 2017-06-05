@@ -195,6 +195,7 @@ describe("Springroll ALP Plugin Tests", function() {
                 app.on('learningEvent', function(event) {
                     override.calledOnce.should.true();
                     override.firstCall.args[0].should.equal(event);
+                    override.firstCall.thisValue.should.equal(app);
                     done();
                 });
                 app.learning.EVENT_NAME(
@@ -245,6 +246,7 @@ describe("Springroll ALP Plugin Tests", function() {
             sdkStub.provideRecommendation.calledOnce.should.true();
             recType.calledOnce.should.true();
             recType.calledWithExactly(context).should.true();
+            recType.firstCall.thisValue.should.equal(app);
 
             var call = sdkStub.provideRecommendation.firstCall;
             call.args[0].should.equal(OTHER_REC);
@@ -292,6 +294,7 @@ describe("Springroll ALP Plugin Tests", function() {
             sdkStub.provideRecommendation.calledOnce.should.true();
             override.calledOnce.should.true();
             override.calledWithExactly(context).should.true();
+            override.firstCall.thisValue.should.equal(app);
 
             var call = sdkStub.provideRecommendation.firstCall;
             call.args[0].should.equal(OTHER_REC);
@@ -319,6 +322,7 @@ describe("Springroll ALP Plugin Tests", function() {
             app.alpPlugin.getRecommendation(context).should.equal(rec);
             override.calledOnce.should.true();
             override.calledWithExactly(rawRec, context).should.true();
+            override.firstCall.thisValue.should.equal(app);
 
             done();
         }, {
