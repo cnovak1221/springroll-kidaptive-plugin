@@ -5,6 +5,32 @@
     "use strict";
     var plugin = new springroll.ApplicationPlugin();
 
+    var toJson = function(o, inArray) {
+        switch (typeof o) {
+            case 'object':
+                if (o !== null && !(o instanceof Boolean) && !(o instanceof Number) && !(o instanceof String)) {
+                    if (o instanceof Array) {
+                        return '[' + o.map(function(i) {
+                            return toJson(i, true);
+                        }).join(',') + ']'
+                    } else {
+                        return '{' + Object.keys(o).sort().map(function(i) {
+                            var value = toJson(o[i]);
+                            return value === undefined ? value : [JSON.stringify(i), value].join(':');
+                        }).filter(function(i) {
+                            return i !== undefined;
+                        }).join(',') + '}';
+                    }
+                }
+            case 'boolean':
+            case 'number':
+            case 'string':
+                return JSON.stringify(o);
+            default:
+                return inArray ? 'null' : undefined;
+        }
+    };
+
     plugin.preload = function(done) {
         //cascading dynamic value resolver.
         var resolveValue = function(value, context) {
@@ -83,7 +109,7 @@
                             args[k] = additionalFields[k] / 1000; //learningEvents report duration in milliseconds
                             delete additionalFields[k];
                         } else if (additionalFields[k] instanceof Object) {
-                            additionalFields[k] = JSON.stringify(additionalFields[k]); //turn nested objects into json
+                            additionalFields[k] = toJson(additionalFields[k]); //turn nested objects into json
                         } else {
                             additionalFields[k] = additionalFields[k].toString();
                         }
