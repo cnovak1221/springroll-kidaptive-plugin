@@ -51,9 +51,17 @@
                     return JSON.parse(JSON.stringify(state));
                 },
                 setState: function(newState) {
-                    for (var key in newState) {
-                        state[key] = JSON.parse(JSON.stringify(newState[key]));
-                    }
+                    //delete keys marked undefined
+                    Object.keys(newState).forEach(function(key) {
+                        if (newState[key] === undefined) {
+                            delete state[key];
+                        }
+                    });
+                    //merge new state
+                    newState = JSON.parse(JSON.stringify(newState));
+                    Object.keys(newState).forEach(function(key) {
+                        state[key] = newState[key];
+                    });
                 }
             };
 
