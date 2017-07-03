@@ -23,7 +23,7 @@
                 sdk: sdk,
                 getRecommendation: function(context) { //recommendations
                     var type = sdk.KidaptiveUtils.copyObject(resolveValue(recType, context) || 'optimalDifficulty');
-                    var params = sdk.KidaptiveUtils.copyObject(resolveValue(recParams, context) || {});
+                    var params = sdk.KidaptiveUtils.copyObject(resolveValue(recParams, context)) || {};
                     params.learnerId = sdk.getLearnerList()[0].id;
                     params.game = gameUri;
                     var rec;
