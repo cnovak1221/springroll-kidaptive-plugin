@@ -5,9 +5,10 @@
   "main": "./dist/kidaptive_alp_plugin.js",
   "scripts": {
     "install": "bower install",
-    "build:debug": "cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
+    "update": "npm update && bower update",
+    "build:debug": "npm run update && cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
     "build:prod": "uglifyjs src/js/main/KidaptiveAlpPlugin.js > dist/kidaptive_alp_plugin.min.js",
-    "build": "npm run build:debug; npm run build:prod",
+    "build": "npm run build:debug && npm run build:prod",
     "version": "npm run build && git add -A",
     "postversion": "git push --follow-tags"
   },
