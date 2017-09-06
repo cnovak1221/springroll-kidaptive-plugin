@@ -23,11 +23,11 @@
     "src"
   ],
   "dependencies": {
-    "springroll-pbskids": "https://projects.pbs.org/bitbucket/scm/sd/springroll-pbskids.git",
-    "kidaptive-sdk-js": "^0.2.5"
+    "springroll-pbskids": "https://projects.pbs.org/bitbucket/scm/sd/springroll-pbskids.git#^0.2.5",
+    "kidaptive-sdk-js": "0.2.7"
   },
   "devDependencies": {
-    "mocha": "^3.4.2",
+    "mocha": "^3.5.0",
     "should": "^11.2.0",
     "sinon-2.3.2": "http://sinonjs.org/releases/sinon-2.3.2.js"
   }

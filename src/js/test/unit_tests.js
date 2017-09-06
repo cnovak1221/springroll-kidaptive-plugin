@@ -196,7 +196,8 @@ describe("Springroll ALP Plugin Tests", function() {
                                 springroll_event_code: '1234'
                             });
                             additionalFields.should.property('game_time');
-                            additionalFields.should.size(9);
+                            additionalFields.should.property('event_count');
+                            additionalFields.should.size(10);
 
                             done();
                         });

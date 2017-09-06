@@ -5,10 +5,8 @@
   "main": "./dist/kidaptive_alp_plugin.js",
   "scripts": {
     "install": "bower install",
-    "update": "npm update && bower update",
-    "build:debug": "npm run update && cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
-    "build:prod": "uglifyjs src/js/main/KidaptiveAlpPlugin.js > dist/kidaptive_alp_plugin.min.js",
-    "build": "npm run build:debug && npm run build:prod",
+    "build:debug": "npm install && cp src/js/main/KidaptiveAlpPlugin.js dist/kidaptive_alp_plugin.js",
+    "build": "npm run build:debug && uglifyjs -m < dist/kidaptive_alp_plugin.js > dist/kidaptive_alp_plugin.min.js",
     "version": "npm run build && git add -A",
     "postversion": "git push --follow-tags"
   },
@@ -29,6 +27,6 @@
   },
   "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin#readme",
   "devDependencies": {
-    "uglify-js": "^3.0.14"
+    "uglify-js": "^3.0.28"
   }
 }
