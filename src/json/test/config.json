@@ -42,5 +42,17 @@
   },
   "specDictionary": {
     "1234": "EVENT_NAME"
+  },
+  "alp": {
+    "apiKey": "API_KEY",
+    "version": {
+      "version": "VERSION",
+      "build": "BUILD"
+    },
+    "gameUri": "GAME_URI",
+    "options": {
+      "dev": true,
+      "sdkOption": "SDK_OPTION"
+    }
   }
 }

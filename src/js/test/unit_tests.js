@@ -8,7 +8,8 @@ var VERSION = {
     build: "BUILD"
 };
 var OPTIONS = {
-    dev:true
+    dev:true,
+    sdkOption: 'SDK_OPTION'
 };
 
 var CONFIG_PATH = '../../json/test/config.json';
@@ -33,13 +34,7 @@ describe("Springroll ALP Plugin Tests", function() {
     var testWithOptions = function(tests, done, options) {
         done = done || function(){};
         app = new Application(options || {
-                configPath: CONFIG_PATH,
-                alp: {
-                    apiKey: API_KEY,
-                    version: VERSION,
-                    gameUri: GAME_URI,
-                    options: OPTIONS
-                }
+                configPath: CONFIG_PATH
             });
         app.on('init', function() {
             try {
@@ -48,7 +43,6 @@ describe("Springroll ALP Plugin Tests", function() {
             } catch (e) {
                 done(e);
             }
-
         });
     };
 
@@ -91,6 +85,22 @@ describe("Springroll ALP Plugin Tests", function() {
             app.alpPlugin.should.property('getState').Function();
             app.alpPlugin.should.property('setState').Function();
         }, done);
+    });
+
+    it("init with options", function(done) {
+        var mergedOptions = KidaptiveSdk.KidaptiveUtils.copyObject(OPTIONS);
+        mergedOptions.sdkOption = "OTHER_SDK_OPTION";
+        testWithOptions(function() {
+            KidaptiveSdk.init.calledWithExactly("OTHER_API_KEY", VERSION, mergedOptions);
+        }, done, {
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: "OTHER_API_KEY",
+                options: {
+                    sdkOption: "OTHER_SDK_OPTION"
+                }
+            }
+        });
     });
 
     it('teardown', function(done) {

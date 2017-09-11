@@ -11,13 +11,38 @@
             return (value instanceof Function && value.bind(this)(context)) || value;
         }.bind(this);
 
-        var recType = this.options.alp.recType;
-        var recParams = this.options.alp.recParams;
-        var recCallback = this.options.alp.recCallback;
-        var gameUri = this.options.alp.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
-        var eventOverride = this.options.alp.eventOverride;
+        //resolve init options. this.options takes precedence over this.config
+        var initOptions = {
+            options:{}
+        };
+
+        var fillInit = function(i) {
+            Object.keys(i).forEach(function(k) {
+                if (k === 'options') {
+                    Object.keys(i[k]).forEach(function(j) {
+                        initOptions.options[j] = i[k][j];
+                    });
+                } else {
+                    initOptions[k] = i[k]
+                }
+            });
+        };
+
+        if (this.config.alp) {
+            fillInit(this.config.alp);
+        }
+
+        if (this.options.alp) {
+            fillInit(this.options.alp)
+        }
+
+        var recType = initOptions.recType;
+        var recParams = initOptions.recParams;
+        var recCallback = initOptions.recCallback;
+        var gameUri = initOptions.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
+        var eventOverride = initOptions.eventOverride;
         var specDict = this.learning.catalog.events || {};
-        KidaptiveSdk.init(this.options.alp.apiKey, this.options.alp.version, this.options.alp.options).then(function(sdk) {
+        KidaptiveSdk.init(initOptions.apiKey, initOptions.version, initOptions.options).then(function(sdk) {
             var state = {}; //can be used to keep track of state information to inform reommendation or event tracking
             this.alpPlugin = {
                 sdk: sdk,
