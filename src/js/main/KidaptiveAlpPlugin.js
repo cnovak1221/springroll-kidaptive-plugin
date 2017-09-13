@@ -81,6 +81,9 @@
                     Object.keys(newState).forEach(function(key) {
                         state[key] = newState[key];
                     });
+                },
+                getInitParams: function() {
+                    return KidaptiveSdk.KidaptiveUtils.copyObject(initOptions, true);
                 }
             };
 

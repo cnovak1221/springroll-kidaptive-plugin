@@ -88,10 +88,14 @@ describe("Springroll ALP Plugin Tests", function() {
     });
 
     it("init with options", function(done) {
-        var mergedOptions = KidaptiveSdk.KidaptiveUtils.copyObject(OPTIONS);
-        mergedOptions.sdkOption = "OTHER_SDK_OPTION";
+        var mergedSdkOptions = KidaptiveSdk.KidaptiveUtils.copyObject(OPTIONS);
+        mergedSdkOptions.sdkOption = "OTHER_SDK_OPTION";
         testWithOptions(function() {
-            KidaptiveSdk.init.calledWithExactly("OTHER_API_KEY", VERSION, mergedOptions);
+            KidaptiveSdk.init.calledWithExactly("OTHER_API_KEY", VERSION, mergedSdkOptions);
+            var mergedOptions = KidaptiveSdk.KidaptiveUtils.copyObject(app.config.alp);
+            mergedOptions.apiKey = "OTHER_API_KEY";
+            mergedOptions.options = mergedSdkOptions;
+            app.alpPlugin.getInitParams().should.deepEqual(mergedOptions);
         }, done, {
             configPath: CONFIG_PATH,
             alp: {
