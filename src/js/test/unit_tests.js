@@ -17,7 +17,7 @@ var CONFIG_PATH = '../../json/test/config.json';
 var OTHER_REC = 'OTHER_REC';
 
 var GAME_URI = 'GAME_URI';
-var USER = 'USER';
+var USER = {id:1};
 var LEARNER_LIST = [{
     id: 'LEARNER'
 }];
@@ -397,11 +397,16 @@ describe("Springroll ALP Plugin Tests", function() {
         testWithOptions(function() {
             app.container.on('openIdAuthFinished',function() {
                 setTimeout(function() {
-                    sdkStub.refresh.calledOnce.should.true();
-                    done();
+                    try {
+                        sdkStub.refresh.calledOnce.should.true();
+                        app.alpPlugin.getState().should.deepEqual({a:1});
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
                 },0);
             });
-            sdkStub.refresh.reset();
+            app.alpPlugin.setState({a:1});
             app.container.trigger('openIdAuthFinished');
         });
     });
@@ -410,11 +415,16 @@ describe("Springroll ALP Plugin Tests", function() {
         testWithOptions(function() {
             app.container.on('openIdRefreshAuthFinished',function() {
                 setTimeout(function() {
-                    sdkStub.refresh.calledOnce.should.true();
-                    done();
+                    try {
+                        sdkStub.refresh.calledOnce.should.true();
+                        app.alpPlugin.getState().should.deepEqual({a:1});
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
                 },0);
             });
-            sdkStub.refresh.reset();
+            app.alpPlugin.setState({a:1});
             app.container.trigger('openIdRefreshAuthFinished');
         });
     });
@@ -423,11 +433,109 @@ describe("Springroll ALP Plugin Tests", function() {
         testWithOptions(function() {
             app.container.on('openIdAllLogoutsComplete',function() {
                 setTimeout(function() {
-                    sdkStub.logoutUser.calledOnce.should.true();
-                    done();
+                    try {
+                        sdkStub.logoutUser.calledOnce.should.true();
+                        app.alpPlugin.getState().should.deepEqual({});
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
                 },0);
             });
-            sdkStub.logoutUser.reset();
+            app.alpPlugin.setState({a:1});
+            app.container.trigger('openIdAllLogoutsComplete');
+        });
+    });
+
+    it('oidc auth different user', function(done) {
+        testWithOptions(function() {
+            app.container.on('openIdAuthFinished',function() {
+                setTimeout(function() {
+                    try {
+                        app.alpPlugin.getState().should.deepEqual({});
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                },0);
+            });
+            app.alpPlugin.setState({a:1});
+            var id = 0;
+            sdkStub.getCurrentUser.callsFake(function(){
+                return {id: ++id};
+            });
+            app.container.trigger('openIdAuthFinished');
+        });
+    });
+
+    it('oidc refresh different user', function(done) {
+        testWithOptions(function() {
+            app.container.on('openIdAuthFinished',function() {
+                setTimeout(function() {
+                    try {
+                        app.alpPlugin.getState().should.deepEqual({});
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                },0);
+            });
+            app.alpPlugin.setState({a:1});
+            var id = 0;
+            sdkStub.getCurrentUser.callsFake(function(){
+                return {id: ++id};
+            });
+            app.container.trigger('openIdAuthFinished');
+        });
+    });
+
+    it('oidc auth anonynmous session', function(done) {
+        testWithOptions(function() {
+            sdkStub.isAnonymousSession.returns(true);
+            app.container.on('openIdAuthFinished',function() {
+                setTimeout(function() {
+                    try {
+                        sdkStub.refresh.called.should.false();
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                },0);
+            });
+            app.container.trigger('openIdAuthFinished');
+        });
+    });
+
+    it('oidc refresh anonynmous session', function(done) {
+        testWithOptions(function() {
+            sdkStub.isAnonymousSession.returns(true);
+            app.container.on('openIdRefreshAuthFinished',function() {
+                setTimeout(function() {
+                    try {
+                        sdkStub.logoutUser.called.should.false();
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                },0);
+            });
+            app.container.trigger('openIdRefreshAuthFinished');
+        });
+    });
+
+    it('oidc logout anonynmous session', function(done) {
+        testWithOptions(function() {
+            sdkStub.isAnonymousSession.returns(true);
+            app.container.on('openIdAllLogoutsComplete',function() {
+                setTimeout(function() {
+                    try {
+                        sdkStub.logoutUser.called.should.false();
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                },0);
+            });
             app.container.trigger('openIdAllLogoutsComplete');
         });
     });
