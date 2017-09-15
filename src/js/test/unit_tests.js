@@ -34,6 +34,7 @@ describe("Springroll ALP Plugin Tests", function() {
     var testWithOptions = function(tests, done, options) {
         done = done || function(){};
         app = new Application(options || {
+                name: "ALP Plugin Test",
                 configPath: CONFIG_PATH
             });
         app.on('init', function() {
@@ -97,6 +98,7 @@ describe("Springroll ALP Plugin Tests", function() {
             mergedOptions.options = mergedSdkOptions;
             app.alpPlugin.getInitParams().should.deepEqual(mergedOptions);
         }, done, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: "OTHER_API_KEY",
@@ -263,6 +265,7 @@ describe("Springroll ALP Plugin Tests", function() {
                 done(e);
             }
         }, undefined, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: API_KEY,
@@ -282,6 +285,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[0].should.equal(OTHER_REC);
             call.args[1].should.properties({game:GAME_URI, learnerId: 'LEARNER'}).size(2);
         }, done, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: API_KEY,
@@ -306,6 +310,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[0].should.equal(OTHER_REC);
             call.args[1].should.properties({game:GAME_URI, learnerId: 'LEARNER'}).size(2);
         }, done, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: API_KEY,
@@ -325,6 +330,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[0].should.equal(OTHER_REC);
             call.args[1].should.properties({param: 'value', game:GAME_URI, learnerId: 'LEARNER'}).size(3);
         }, done, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: API_KEY,
@@ -352,6 +358,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[0].should.equal(OTHER_REC);
             call.args[1].should.properties({param: 'value', game:GAME_URI, learnerId: 'LEARNER'}).size(3);
         }, done, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: API_KEY,
@@ -375,6 +382,7 @@ describe("Springroll ALP Plugin Tests", function() {
             override.calledWithExactly(rawRec, context).should.true();
             override.firstCall.thisValue.should.equal(app);
         }, done, {
+            name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
             alp: {
                 apiKey: API_KEY,
@@ -382,6 +390,45 @@ describe("Springroll ALP Plugin Tests", function() {
                 gameUri: GAME_URI,
                 recCallback: override
             }
+        });
+    });
+
+    it('oidc auth finished', function(done) {
+        testWithOptions(function() {
+            app.container.on('openIdAuthFinished',function() {
+                setTimeout(function() {
+                    sdkStub.refresh.calledOnce.should.true();
+                    done();
+                },0);
+            });
+            sdkStub.refresh.reset();
+            app.container.trigger('openIdAuthFinished');
+        });
+    });
+
+    it('oidc refresh auth finished', function(done) {
+        testWithOptions(function() {
+            app.container.on('openIdRefreshAuthFinished',function() {
+                setTimeout(function() {
+                    sdkStub.refresh.calledOnce.should.true();
+                    done();
+                },0);
+            });
+            sdkStub.refresh.reset();
+            app.container.trigger('openIdRefreshAuthFinished');
+        });
+    });
+
+    it('oidc logout complete', function(done) {
+        testWithOptions(function() {
+            app.container.on('openIdAllLogoutsComplete',function() {
+                setTimeout(function() {
+                    sdkStub.logoutUser.calledOnce.should.true();
+                    done();
+                },0);
+            });
+            sdkStub.logoutUser.reset();
+            app.container.trigger('openIdAllLogoutsComplete');
         });
     });
 });
