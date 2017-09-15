@@ -122,10 +122,6 @@
             if (this.learning) {
                 //the default event converter
                 var pluginDefault = function(data) {
-                    if (!sdk.getCurrentUser()) {
-                        return;
-                    }
-
                     var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
                     var additionalFields = sdk.KidaptiveUtils.copyObject(data.event_data);
                     var args = {additionalFields: additionalFields};
@@ -149,7 +145,9 @@
                 };
                 var override = eventOverride || pluginDefault;
                 this.learning.on("learningEvent", function(data) {
-                    override.bind(this)(data, pluginDefault);
+                    if (sdk.getCurrentUser() || sdk.isAnonymousSession()) {
+                        override.bind(this)(data, pluginDefault);
+                    }
                 }.bind(this));
             }
             done();
