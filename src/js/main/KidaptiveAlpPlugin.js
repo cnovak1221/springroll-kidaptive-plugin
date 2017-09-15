@@ -87,6 +87,19 @@
                 }
             };
 
+            //if using oidc auth, listen for login state changes
+            if (!initOptions.options.noOidc && this.container) {
+                this.container.on('openIdAuthFinished', function() {
+                    sdk.refresh();
+                }.bind(this));
+                this.container.on('openIdRefreshAuthFinished', function() {
+                    sdk.refresh();
+                }.bind(this));
+                this.container.on('openIdAllLogoutsComplete', function() {
+                    sdk.logoutUser();
+                }.bind(this));
+            }
+
             //if Learning Module exists, turn learningEvents into behavior events
             if (this.learning) {
                 //the default event converter
