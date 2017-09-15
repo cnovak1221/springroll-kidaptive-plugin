@@ -89,15 +89,33 @@
 
             //if using oidc auth, listen for login state changes
             if (!initOptions.options.noOidc && this.container) {
-                this.container.on('openIdAuthFinished', function() {
+                //clear state
+                var refresh = function() {
+                    if (sdk.isAnonymousSession()) {
+                        return;
+                    }
+                    var c = sdk.getCurrentUser();
+                    var currentUserId = c && c.id;
+
                     sdk.refresh();
-                }.bind(this));
-                this.container.on('openIdRefreshAuthFinished', function() {
-                    sdk.refresh();
-                }.bind(this));
+                    sdk.init().then(function() {
+                        var newUser = sdk.getCurrentUser();
+                        if (!newUser || newUser.id !== currentUserId) {
+                            state = {};
+                        }
+                    });
+                };
+                this.container.on('openIdAuthFinished', refresh);
+                this.container.on('openIdRefreshAuthFinished', refresh);
                 this.container.on('openIdAllLogoutsComplete', function() {
-                    sdk.logoutUser();
-                }.bind(this));
+                    if (sdk.isAnonymousSession()) {
+                        return;
+                    }
+                    sdk.logoutUser()
+                    sdk.init().then(function() {
+                        state = {};
+                    });
+                });
             }
 
             //if Learning Module exists, turn learningEvents into behavior events
