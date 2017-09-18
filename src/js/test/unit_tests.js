@@ -54,6 +54,7 @@ describe("Springroll ALP Plugin Tests", function() {
         sdkStub.init.resolves(sdkStub);
         sdkStub.refresh.resolves();
         sdkStub.logoutUser.resolves();
+        sdkStub.startAnonymousSession.resolves();
         sdkStub.destroy.resolves();
     });
 
@@ -213,62 +214,57 @@ describe("Springroll ALP Plugin Tests", function() {
 
     it('default event handling', function(done) {
         testWithOptions(function() {
-            try {
-                //wait a bit. startGame needs to run first
-                setTimeout(function() {
-                    try {
-                        sdkStub.reportBehavior.reset();
-                        app.on('learningEvent', function() {
-                            app.alpPlugin.sdk.init().then(function(){
-                                sdkStub.startAnonymousSession.called.should.false();
-                                sdkStub.reportBehavior.calledOnce.should.true();
+            setTimeout(function() {
+                app.on('learningEvent', function() {
+                    app.alpPlugin.sdk.init().then(function(){
+                        try {
+                            sdkStub.startAnonymousSession.called.should.false();
+                            sdkStub.reportBehavior.calledOnce.should.true();
 
-                                var call = sdkStub.reportBehavior.firstCall;
-                                call.args[0].should.equal('EVENT_NAME');
+                            var call = sdkStub.reportBehavior.firstCall;
+                            call.args[0].should.equal('EVENT_NAME');
 
-                                var eventArgs = call.args[1];
-                                eventArgs.should.properties({
-                                    learnerId: 'LEARNER',
-                                    gameUri: GAME_URI,
-                                    duration: 2.345
-                                });
-                                eventArgs.should.property('additionalFields');
-                                eventArgs.should.size(4);
-
-                                var additionalFields = eventArgs.additionalFields;
-                                additionalFields.should.properties({
-                                    boolean_field: 'true',
-                                    number_field: '3',
-                                    string_field: 'asdf',
-                                    array_field: '[]',
-                                    object_field: '{}',
-                                    springroll_event_id: 'SPRINGROLL_EVENT_ID',
-                                    springroll_game_id: 'SPRINGROLL_GAME_ID',
-                                    springroll_event_code: '1234'
-                                });
-                                additionalFields.should.property('game_time');
-                                additionalFields.should.property('event_count');
-                                additionalFields.should.size(10);
-
-                                done();
+                            var eventArgs = call.args[1];
+                            eventArgs.should.properties({
+                                learnerId: 'LEARNER',
+                                gameUri: GAME_URI,
+                                duration: 2.345
                             });
-                        });
+                            eventArgs.should.property('additionalFields');
+                            eventArgs.should.size(4);
 
-                        app.learning.EVENT_NAME(
-                            2345, //duration
-                            true, //boolean
-                            3, //number
-                            'asdf', //string
-                            [], //array
-                            {} //object
-                        );
-                    } catch (e) {
-                        done(e);
-                    }
-                },0);
-            } catch (e) {
-                done(e);
-            }
+                            var additionalFields = eventArgs.additionalFields;
+                            additionalFields.should.properties({
+                                boolean_field: 'true',
+                                number_field: '3',
+                                string_field: 'asdf',
+                                array_field: '[]',
+                                object_field: '{}',
+                                springroll_event_id: 'SPRINGROLL_EVENT_ID',
+                                springroll_game_id: 'SPRINGROLL_GAME_ID',
+                                springroll_event_code: '1234'
+                            });
+                            additionalFields.should.property('game_time');
+                            additionalFields.should.property('event_count');
+                            additionalFields.should.size(10);
+
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
+                });
+                sdkStub.startAnonymousSession.resetHistory();
+                sdkStub.reportBehavior.resetHistory();
+                app.learning.EVENT_NAME(
+                    2345, //duration
+                    true, //boolean
+                    3, //number
+                    'asdf', //string
+                    [], //array
+                    {} //object
+                );
+            },0);
         });
     });
 
@@ -472,22 +468,25 @@ describe("Springroll ALP Plugin Tests", function() {
 
     it('oidc auth success empty', function(done) {
         testWithOptions(function() {
-            app.container.on('openIdAuthSuccess',function() {
-                setTimeout(function() {
-                    try {
-                        sdkStub.refresh.calledOnce.should.true();
-                        sdkStub.logoutUser.called.should.false();
-                        app.alpPlugin.getState().should.deepEqual({});
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                },0);
-            });
-            app.alpPlugin.setState({a:1});
-            sdkStub.getCurrentUser.onCall(1).returns(undefined);
+            setTimeout(function() {
+                app.container.on('openIdAuthSuccess',function() {
+                    setTimeout(function() {
+                        try {
+                            sdkStub.refresh.calledOnce.should.true();
+                            sdkStub.logoutUser.called.should.false();
+                            app.alpPlugin.getState().should.deepEqual({});
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    },0);
+                });
+                app.alpPlugin.setState({a:1});
+                sdkStub.getCurrentUser.resetHistory();
+                sdkStub.getCurrentUser.onCall(1).returns(undefined);
 
-            app.container.trigger({type: 'openIdAuthSuccess', data:{name:"Kidaptive ALP"}});
+                app.container.trigger({type: 'openIdAuthSuccess', data:{name:"Kidaptive ALP"}});
+            });
         });
     });
 
@@ -609,22 +608,24 @@ describe("Springroll ALP Plugin Tests", function() {
 
     it('oidc refresh success empty', function(done) {
         testWithOptions(function() {
-            app.container.on('openIdRefreshAuthSuccess',function() {
-                setTimeout(function() {
-                    try {
-                        sdkStub.refresh.calledOnce.should.true();
-                        sdkStub.logoutUser.called.should.false();
-                        app.alpPlugin.getState().should.deepEqual({});
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                },0);
-            });
-            app.alpPlugin.setState({a:1});
-            sdkStub.getCurrentUser.onCall(1).returns(undefined);
+            setTimeout(function() {
+                app.container.on('openIdRefreshAuthSuccess',function() {
+                    setTimeout(function() {
+                        try {
+                            sdkStub.refresh.calledOnce.should.true();
+                            sdkStub.logoutUser.called.should.false();
+                            app.alpPlugin.getState().should.deepEqual({});
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    },0);
+                });
+                app.alpPlugin.setState({a:1});
+                sdkStub.getCurrentUser.onCall(1).returns(undefined);
 
-            app.container.trigger({type: 'openIdRefreshAuthSuccess', data:{name:"Kidaptive ALP"}});
+                app.container.trigger({type: 'openIdRefreshAuthSuccess', data:{name:"Kidaptive ALP"}});
+            });
         });
     });
 
