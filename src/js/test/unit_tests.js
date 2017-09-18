@@ -52,6 +52,8 @@ describe("Springroll ALP Plugin Tests", function() {
         sdkStub.getLearnerList.returns(LEARNER_LIST);
         sdkStub.flushEvents.resolves();
         sdkStub.init.resolves(sdkStub);
+        sdkStub.refresh.resolves();
+        sdkStub.logoutUser.resolves();
         sdkStub.destroy.resolves();
     });
 
@@ -184,12 +186,14 @@ describe("Springroll ALP Plugin Tests", function() {
             setTimeout(function() {
                 try {
                     app.on('learningEvent', function() {
-                        try {
-                            sdkStub.startAnonymousSession.calledOnce.should.true();
-                            done();
-                        } catch (e) {
-                            done(e);
-                        }
+                        app.alpPlugin.sdk.init().then(function(){
+                            try {
+                                sdkStub.startAnonymousSession.calledOnce.should.true();
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        });
                     });
                     sdkStub.getCurrentUser.returns(undefined);
                     app.learning.EVENT_NAME(
@@ -215,37 +219,39 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.reportBehavior.reset();
                         app.on('learningEvent', function() {
-                            sdkStub.startAnonymousSession.called.should.false();
-                            sdkStub.reportBehavior.calledOnce.should.true();
+                            app.alpPlugin.sdk.init().then(function(){
+                                sdkStub.startAnonymousSession.called.should.false();
+                                sdkStub.reportBehavior.calledOnce.should.true();
 
-                            var call = sdkStub.reportBehavior.firstCall;
-                            call.args[0].should.equal('EVENT_NAME');
+                                var call = sdkStub.reportBehavior.firstCall;
+                                call.args[0].should.equal('EVENT_NAME');
 
-                            var eventArgs = call.args[1];
-                            eventArgs.should.properties({
-                                learnerId: 'LEARNER',
-                                gameUri: GAME_URI,
-                                duration: 2.345
+                                var eventArgs = call.args[1];
+                                eventArgs.should.properties({
+                                    learnerId: 'LEARNER',
+                                    gameUri: GAME_URI,
+                                    duration: 2.345
+                                });
+                                eventArgs.should.property('additionalFields');
+                                eventArgs.should.size(4);
+
+                                var additionalFields = eventArgs.additionalFields;
+                                additionalFields.should.properties({
+                                    boolean_field: 'true',
+                                    number_field: '3',
+                                    string_field: 'asdf',
+                                    array_field: '[]',
+                                    object_field: '{}',
+                                    springroll_event_id: 'SPRINGROLL_EVENT_ID',
+                                    springroll_game_id: 'SPRINGROLL_GAME_ID',
+                                    springroll_event_code: '1234'
+                                });
+                                additionalFields.should.property('game_time');
+                                additionalFields.should.property('event_count');
+                                additionalFields.should.size(10);
+
+                                done();
                             });
-                            eventArgs.should.property('additionalFields');
-                            eventArgs.should.size(4);
-
-                            var additionalFields = eventArgs.additionalFields;
-                            additionalFields.should.properties({
-                                boolean_field: 'true',
-                                number_field: '3',
-                                string_field: 'asdf',
-                                array_field: '[]',
-                                object_field: '{}',
-                                springroll_event_id: 'SPRINGROLL_EVENT_ID',
-                                springroll_game_id: 'SPRINGROLL_GAME_ID',
-                                springroll_event_code: '1234'
-                            });
-                            additionalFields.should.property('game_time');
-                            additionalFields.should.property('event_count');
-                            additionalFields.should.size(10);
-
-                            done();
                         });
 
                         app.learning.EVENT_NAME(
@@ -274,10 +280,12 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         override.reset();
                         app.on('learningEvent', function(event) {
-                            override.calledOnce.should.true();
-                            override.firstCall.args[0].should.equal(event);
-                            override.firstCall.thisValue.should.equal(app);
-                            done();
+                            app.alpPlugin.sdk.init().then(function() {
+                                override.calledOnce.should.true();
+                                override.firstCall.args[0].should.equal(event);
+                                override.firstCall.thisValue.should.equal(app);
+                                done();
+                            });
                         });
                         app.learning.EVENT_NAME(
                             2345, //duration
