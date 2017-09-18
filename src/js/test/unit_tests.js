@@ -181,37 +181,6 @@ describe("Springroll ALP Plugin Tests", function() {
         }, done);
     });
 
-    it('auto start anonymous session', function(done) {
-        testWithOptions(function() {
-            //wait a bit. startGame needs to run first
-            setTimeout(function() {
-                try {
-                    app.on('learningEvent', function() {
-                        app.alpPlugin.sdk.init().then(function(){
-                            try {
-                                sdkStub.startAnonymousSession.calledOnce.should.true();
-                                done();
-                            } catch (e) {
-                                done(e);
-                            }
-                        });
-                    });
-                    sdkStub.getCurrentUser.returns(undefined);
-                    app.learning.EVENT_NAME(
-                        2345, //duration
-                        true, //boolean
-                        3, //number
-                        'asdf', //string
-                        [], //array
-                        {} //object
-                    );
-                } catch (e) {
-                    done(e);
-                }
-            },0);
-        });
-    });
-
     it('default event handling', function(done) {
         testWithOptions(function() {
             setTimeout(function() {

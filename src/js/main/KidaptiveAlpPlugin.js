@@ -165,19 +165,7 @@
                 };
                 var override = (eventOverride || pluginDefault).bind(this);
                 this.learning.on("learningEvent", function(data) {
-                    //avoid race conditions by placing at the end of event queue
-                    sdk.init().then(function() {
-                        //we are about to process an event.
-                        //If a no user is logged in and no anonymous session has been started, start an anonymous session.
-                        if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
-                            sdk.startAnonymousSession().then(function(){
-                                state = {};
-                                override(data,pluginDefault)
-                            });
-                        } else {
-                            override(data,pluginDefault);
-                        }
-                    }.bind(this));
+                    override(data,pluginDefault);
                 }.bind(this));
             }
             done();
