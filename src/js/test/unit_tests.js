@@ -185,45 +185,41 @@ describe("Springroll ALP Plugin Tests", function() {
         testWithOptions(function() {
             setTimeout(function() {
                 app.on('learningEvent', function() {
-                    app.alpPlugin.sdk.init().then(function(){
-                        try {
-                            sdkStub.startAnonymousSession.called.should.false();
-                            sdkStub.reportBehavior.calledOnce.should.true();
+                    try {
+                        sdkStub.reportBehavior.calledOnce.should.true();
 
-                            var call = sdkStub.reportBehavior.firstCall;
-                            call.args[0].should.equal('EVENT_NAME');
+                        var call = sdkStub.reportBehavior.firstCall;
+                        call.args[0].should.equal('EVENT_NAME');
 
-                            var eventArgs = call.args[1];
-                            eventArgs.should.properties({
-                                learnerId: 'LEARNER',
-                                gameUri: GAME_URI,
-                                duration: 2.345
-                            });
-                            eventArgs.should.property('additionalFields');
-                            eventArgs.should.size(4);
+                        var eventArgs = call.args[1];
+                        eventArgs.should.properties({
+                            learnerId: 'LEARNER',
+                            gameUri: GAME_URI,
+                            duration: 2.345
+                        });
+                        eventArgs.should.property('additionalFields');
+                        eventArgs.should.size(4);
 
-                            var additionalFields = eventArgs.additionalFields;
-                            additionalFields.should.properties({
-                                boolean_field: 'true',
-                                number_field: '3',
-                                string_field: 'asdf',
-                                array_field: '[]',
-                                object_field: '{}',
-                                springroll_event_id: 'SPRINGROLL_EVENT_ID',
-                                springroll_game_id: 'SPRINGROLL_GAME_ID',
-                                springroll_event_code: '1234'
-                            });
-                            additionalFields.should.property('game_time');
-                            additionalFields.should.property('event_count');
-                            additionalFields.should.size(10);
+                        var additionalFields = eventArgs.additionalFields;
+                        additionalFields.should.properties({
+                            boolean_field: 'true',
+                            number_field: '3',
+                            string_field: 'asdf',
+                            array_field: '[]',
+                            object_field: '{}',
+                            springroll_event_id: 'SPRINGROLL_EVENT_ID',
+                            springroll_game_id: 'SPRINGROLL_GAME_ID',
+                            springroll_event_code: '1234'
+                        });
+                        additionalFields.should.property('game_time');
+                        additionalFields.should.property('event_count');
+                        additionalFields.should.size(10);
 
-                            done();
-                        } catch (e) {
-                            done(e);
-                        }
-                    });
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
                 });
-                sdkStub.startAnonymousSession.resetHistory();
                 sdkStub.reportBehavior.resetHistory();
                 app.learning.EVENT_NAME(
                     2345, //duration
@@ -240,33 +236,27 @@ describe("Springroll ALP Plugin Tests", function() {
     it('event reporting override', function(done) {
         var override = sinon.spy();
         testWithOptions(function() {
-            try {
-                setTimeout(function() {
+            setTimeout(function() {
+                override.reset();
+                app.on('learningEvent', function(event) {
                     try {
-                        override.reset();
-                        app.on('learningEvent', function(event) {
-                            app.alpPlugin.sdk.init().then(function() {
-                                override.calledOnce.should.true();
-                                override.firstCall.args[0].should.equal(event);
-                                override.firstCall.thisValue.should.equal(app);
-                                done();
-                            });
-                        });
-                        app.learning.EVENT_NAME(
-                            2345, //duration
-                            true, //boolean
-                            3, //number
-                            'asdf', //string
-                            [], //array
-                            {} //object
-                        );
+                        override.calledOnce.should.true();
+                        override.firstCall.args[0].should.equal(event);
+                        override.firstCall.thisValue.should.equal(app);
+                        done();
                     } catch (e) {
                         done(e);
                     }
-                },0);
-            } catch (e) {
-                done(e);
-            }
+                });
+                app.learning.EVENT_NAME(
+                    2345, //duration
+                    true, //boolean
+                    3, //number
+                    'asdf', //string
+                    [], //array
+                    {} //object
+                );
+            },0);
         }, undefined, {
             name: "ALP Plugin Test",
             configPath: CONFIG_PATH,

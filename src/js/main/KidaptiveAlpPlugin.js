@@ -142,6 +142,9 @@
             if (this.learning) {
                 //the default event converter
                 var pluginDefault = function(data) {
+                    if (!sdk.getCurrentUser()) {
+                        return;
+                    }
                     var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
                     var additionalFields = sdk.KidaptiveUtils.copyObject(data.event_data);
                     var args = {additionalFields: additionalFields};
