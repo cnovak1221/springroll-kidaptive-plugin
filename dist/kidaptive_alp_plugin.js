@@ -87,14 +87,55 @@
                 }
             };
 
+            //if using oidc auth, listen for login state changes
+            if (!initOptions.options.noOidc && this.container) {
+                var authSuccess = function(event) {
+                    if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
+                        return;
+                    }
+                    var userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                    if (sdk.isAnonymousSession()) {
+                        sdk.logoutUser();
+                    }
+                    sdk.refresh();
+                    sdk.init().then(function() {
+                        var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                        if (!newUserId || newUserId !== userId) {
+                            state = {};
+                        }
+                    });
+                };
+
+                var authFail = function(event) {
+                    if (!sdk.isAnonymousSession() && sdk.KidaptiveUtils.getObject(event, ['data','name']) === 'Kidaptive ALP') {
+                        sdk.logoutUser();
+                        sdk.init().then(function() {
+                            state = {};
+                        });
+                    }
+                };
+
+                var logout = function() {
+                    if (sdk.isAnonymousSession()) {
+                        sdk.logoutUser();
+                    }
+                    sdk.logoutUser();
+                    sdk.init().then(function() {
+                        state = {};
+                    });
+                };
+
+                this.container.on('openIdAuthSuccess', authSuccess);
+                this.container.on('openIdRefreshAuthSuccess', authSuccess);
+                this.container.on('openIdAuthFailure', authFail);
+                this.container.on('openIdRefreshAuthFailure', authFail);
+                this.container.on('openIdAllLogoutsComplete', logout);
+            }
+
             //if Learning Module exists, turn learningEvents into behavior events
             if (this.learning) {
                 //the default event converter
                 var pluginDefault = function(data) {
-                    if (!sdk.getCurrentUser()) {
-                        return;
-                    }
-
                     var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
                     var additionalFields = sdk.KidaptiveUtils.copyObject(data.event_data);
                     var args = {additionalFields: additionalFields};
@@ -118,6 +159,12 @@
                 };
                 var override = eventOverride || pluginDefault;
                 this.learning.on("learningEvent", function(data) {
+                    //we are about to process an event.
+                    //If a no user is logged in and no anonymous session has been started, start an anonymous session.
+                    if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
+                        sdk.startAnonymousSession();
+                        state = {};
+                    }
                     override.bind(this)(data, pluginDefault);
                 }.bind(this));
             }
