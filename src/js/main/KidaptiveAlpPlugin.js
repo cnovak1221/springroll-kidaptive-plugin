@@ -89,33 +89,47 @@
 
             //if using oidc auth, listen for login state changes
             if (!initOptions.options.noOidc && this.container) {
-                //clear state
-                var refresh = function() {
-                    if (sdk.isAnonymousSession()) {
+                var authSuccess = function(event) {
+                    if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
                         return;
                     }
-                    var c = sdk.getCurrentUser();
-                    var currentUserId = c && c.id;
-
+                    var userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                    if (sdk.isAnonymousSession()) {
+                        sdk.logoutUser();
+                    }
                     sdk.refresh();
                     sdk.init().then(function() {
-                        var newUser = sdk.getCurrentUser();
-                        if (!newUser || newUser.id !== currentUserId) {
+                        var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                        if (!newUserId || newUserId !== userId) {
                             state = {};
                         }
                     });
                 };
-                this.container.on('openIdAuthFinished', refresh);
-                this.container.on('openIdRefreshAuthFinished', refresh);
-                this.container.on('openIdAllLogoutsComplete', function() {
-                    if (sdk.isAnonymousSession()) {
-                        return;
+
+                var authFail = function(event) {
+                    if (!sdk.isAnonymousSession() && sdk.KidaptiveUtils.getObject(event, ['data','name']) === 'Kidaptive ALP') {
+                        sdk.logoutUser();
+                        sdk.init().then(function() {
+                            state = {};
+                        });
                     }
-                    sdk.logoutUser()
+                };
+
+                var logout = function() {
+                    if (sdk.isAnonymousSession()) {
+                        sdk.logoutUser();
+                    }
+                    sdk.logoutUser();
                     sdk.init().then(function() {
                         state = {};
                     });
-                });
+                };
+
+                this.container.on('openIdAuthSuccess', authSuccess);
+                this.container.on('openIdRefreshAuthSuccess', authSuccess);
+                this.container.on('openIdAuthFailure', authFail);
+                this.container.on('openIdRefreshAuthFailure', authFail);
+                this.container.on('openIdAllLogoutsComplete', logout);
             }
 
             //if Learning Module exists, turn learningEvents into behavior events
@@ -145,9 +159,13 @@
                 };
                 var override = eventOverride || pluginDefault;
                 this.learning.on("learningEvent", function(data) {
-                    if (sdk.getCurrentUser() || sdk.isAnonymousSession()) {
-                        override.bind(this)(data, pluginDefault);
+                    //we are about to process an event.
+                    //If a no user is logged in and no anonymous session has been started, start an anonymous session.
+                    if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
+                        sdk.startAnonymousSession();
+                        state = {};
                     }
+                    override.bind(this)(data, pluginDefault);
                 }.bind(this));
             }
             done();
