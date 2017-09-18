@@ -108,8 +108,11 @@
                 };
 
                 var authFail = function(event) {
+                    if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
+                        return;
+                    }
                     sdk.init().then(function() {
-                        if (!sdk.isAnonymousSession() && sdk.KidaptiveUtils.getObject(event, ['data','name']) === 'Kidaptive ALP') {
+                        if (!sdk.isAnonymousSession()) {
                             sdk.logoutUser().then(function() {
                                 state = {};
                             });
@@ -160,17 +163,20 @@
                     delete additionalFields.event_code;
                     sdk.reportBehavior(eventName,args);
                 };
-                var override = eventOverride || pluginDefault;
+                var override = (eventOverride || pluginDefault).bind(this);
                 this.learning.on("learningEvent", function(data) {
                     //avoid race conditions by placing at the end of event queue
                     sdk.init().then(function() {
                         //we are about to process an event.
                         //If a no user is logged in and no anonymous session has been started, start an anonymous session.
                         if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
-                            sdk.startAnonymousSession();
-                            state = {};
+                            sdk.startAnonymousSession().then(function(){
+                                state = {};
+                                override(data,pluginDefault)
+                            });
+                        } else {
+                            override(data,pluginDefault);
                         }
-                        override.bind(this)(data, pluginDefault);
                     }.bind(this));
                 }.bind(this));
             }
