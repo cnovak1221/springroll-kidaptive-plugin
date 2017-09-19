@@ -84,6 +84,11 @@
                 },
                 getInitParams: function() {
                     return KidaptiveSdk.KidaptiveUtils.copyObject(initOptions, true);
+                },
+                startAnonymousSession: function() {
+                    return sdk.startAnonymousSession().then(function() {
+                        state = {};
+                    });
                 }
             };
 
