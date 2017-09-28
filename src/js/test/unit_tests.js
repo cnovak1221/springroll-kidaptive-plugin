@@ -393,6 +393,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.true();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -401,6 +402,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthSuccess', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -412,6 +416,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.true();
                         sdkStub.logoutUser.called.should.true();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -421,6 +426,9 @@ describe("Springroll ALP Plugin Tests", function() {
             });
             app.alpPlugin.setState({a:1});
             sdkStub.isAnonymousSession.returns(true);
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthSuccess', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -432,18 +440,21 @@ describe("Springroll ALP Plugin Tests", function() {
                     setTimeout(function() {
                         try {
                             sdkStub.refresh.calledOnce.should.true();
-                            sdkStub.logoutUser.called.should.false();
+                            sdkStub.logoutUser.called.should.true();
+                            sdkStub.startAnonymousSession.called.should.true();
                             app.alpPlugin.getState().should.deepEqual({});
                             done();
                         } catch (e) {
                             done(e);
                         }
-                    },0);
+                    });
                 });
                 app.alpPlugin.setState({a:1});
                 sdkStub.getCurrentUser.resetHistory();
+                sdkStub.logoutUser.resetHistory();
+                sdkStub.refresh.resetHistory();
+                sdkStub.startAnonymousSession.resetHistory();
                 sdkStub.getCurrentUser.onCall(1).returns(undefined);
-
                 app.container.trigger({type: 'openIdAuthSuccess', data:{name:"Kidaptive ALP"}});
             });
         });
@@ -456,6 +467,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.false();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -464,6 +476,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthSuccess', data:{name:"Something else"}});
         });
     });
@@ -475,6 +490,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.false();
                         sdkStub.logoutUser.called.should.true();
+                        sdkStub.startAnonymousSession.called.should.true();
                         app.alpPlugin.getState().should.deepEqual({});
                         done();
                     } catch (e) {
@@ -483,6 +499,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthFailure', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -494,6 +513,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.false();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -503,6 +523,9 @@ describe("Springroll ALP Plugin Tests", function() {
             });
             app.alpPlugin.setState({a:1});
             sdkStub.isAnonymousSession.returns(true);
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthFailure', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -514,6 +537,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.called.should.false();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -522,6 +546,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthFailure', data:{name:"Something Else"}});
         });
     });
@@ -532,7 +559,8 @@ describe("Springroll ALP Plugin Tests", function() {
                 setTimeout(function() {
                     try {
                         sdkStub.refresh.calledOnce.should.true();
-                        sdkStub.logoutUser.called.should.false();
+                        sdkStub.logoutUser.called.should.false()
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -541,6 +569,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdRefreshAuthSuccess', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -552,6 +583,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.true();
                         sdkStub.logoutUser.called.should.true();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -561,6 +593,9 @@ describe("Springroll ALP Plugin Tests", function() {
             });
             app.alpPlugin.setState({a:1});
             sdkStub.isAnonymousSession.returns(true);
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdRefreshAuthSuccess', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -572,17 +607,21 @@ describe("Springroll ALP Plugin Tests", function() {
                     setTimeout(function() {
                         try {
                             sdkStub.refresh.calledOnce.should.true();
-                            sdkStub.logoutUser.called.should.false();
+                            sdkStub.logoutUser.called.should.true();
+                            sdkStub.startAnonymousSession.called.should.true();
                             app.alpPlugin.getState().should.deepEqual({});
                             done();
                         } catch (e) {
                             done(e);
                         }
-                    },0);
+                    });
                 });
                 app.alpPlugin.setState({a:1});
+                sdkStub.getCurrentUser.resetHistory();
+                sdkStub.logoutUser.resetHistory();
+                sdkStub.refresh.resetHistory();
+                sdkStub.startAnonymousSession.resetHistory();
                 sdkStub.getCurrentUser.onCall(1).returns(undefined);
-
                 app.container.trigger({type: 'openIdRefreshAuthSuccess', data:{name:"Kidaptive ALP"}});
             });
         });
@@ -595,6 +634,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.false();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -603,6 +643,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdRefreshAuthSuccess', data:{name:"Something else"}});
         });
     });
@@ -614,6 +657,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.false();
                         sdkStub.logoutUser.called.should.true();
+                        sdkStub.startAnonymousSession.called.should.true();
                         app.alpPlugin.getState().should.deepEqual({});
                         done();
                     } catch (e) {
@@ -622,6 +666,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdRefreshAuthFailure', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -633,6 +680,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.calledOnce.should.false();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -642,6 +690,9 @@ describe("Springroll ALP Plugin Tests", function() {
             });
             app.alpPlugin.setState({a:1});
             sdkStub.isAnonymousSession.returns(true);
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdAuthFailure', data:{name:"Kidaptive ALP"}});
         });
     });
@@ -653,6 +704,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.refresh.called.should.false();
                         sdkStub.logoutUser.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
                     } catch (e) {
@@ -661,6 +713,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger({type: 'openIdRefreshAuthFailure', data:{name:"Something Else"}});
         });
     });
@@ -672,6 +727,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.logoutUser.calledOnce.should.true();
                         sdkStub.refresh.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.true();
                         app.alpPlugin.getState().should.deepEqual({});
                         done();
                     } catch (e) {
@@ -680,6 +736,9 @@ describe("Springroll ALP Plugin Tests", function() {
                 },0);
             });
             app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger('openIdAllLogoutsComplete');
         });
     });
@@ -692,6 +751,7 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         sdkStub.logoutUser.calledTwice.should.true();
                         sdkStub.refresh.called.should.false();
+                        sdkStub.startAnonymousSession.called.should.true();
                         app.alpPlugin.getState().should.deepEqual({});
                         done();
                     } catch (e) {
@@ -699,7 +759,10 @@ describe("Springroll ALP Plugin Tests", function() {
                     }
                 },0);
             });
-            app.alpPlugin.setState({a:1})
+            app.alpPlugin.setState({a:1});
+            sdkStub.logoutUser.resetHistory();
+            sdkStub.refresh.resetHistory();
+            sdkStub.startAnonymousSession.resetHistory();
             app.container.trigger('openIdAllLogoutsComplete');
         });
     });
