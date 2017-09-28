@@ -42,8 +42,20 @@
         var gameUri = initOptions.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
         var eventOverride = initOptions.eventOverride;
         var specDict = this.learning.catalog.events || {};
-        KidaptiveSdk.init(initOptions.apiKey, initOptions.version, initOptions.options).then(function(sdk) {
-            var state = {}; //can be used to keep track of state information to inform reommendation or event tracking
+
+        var sdkOptions = KidaptiveSdk.KidaptiveUtils.copyObject(initOptions.options) || {};
+        sdkOptions.autoFlushCallbacks = sdkOptions.autoFlushCallbacks || [];
+        sdkOptions.autoFlushCallbacks.splice(0,0,function(promise) {
+            promise.then(function() {
+                if (!KidaptiveSdk.getCurrentUser() && !KidaptiveSdk.isAnonymousSession()) {
+                    KidaptiveSdk.startAnonymousSession();
+                }
+            });
+        });
+
+        KidaptiveSdk.init(initOptions.apiKey, initOptions.version, sdkOptions).then(function(sdk) {
+            var state = {};
+
             this.alpPlugin = {
                 sdk: sdk,
                 getRecommendation: function(context) { //recommendations
@@ -84,11 +96,6 @@
                 },
                 getInitParams: function() {
                     return KidaptiveSdk.KidaptiveUtils.copyObject(initOptions, true);
-                },
-                startAnonymousSession: function() {
-                    return sdk.startAnonymousSession().then(function() {
-                        state = {};
-                    });
                 }
             };
 
@@ -98,17 +105,26 @@
                     if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
                         return;
                     }
+                    var userId;
                     sdk.init().then(function() {
-                        var userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                        userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
                         if (sdk.isAnonymousSession()) {
                             sdk.logoutUser();
                         }
-                        sdk.refresh().then(function() {
-                            var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
-                            if (!newUserId || newUserId !== userId) {
-                                state = {};
-                            }
-                        });
+                        return sdk.refresh();
+                    }).then(function() {
+                        var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                        if (!newUserId) {
+                            throw new Error();
+                        }
+                        if (newUserId !== userId) {
+                            state = {};
+                        }
+                    }).catch(function() {
+                        sdk.logoutUser();
+                        sdk.startAnonymousSession().then(function() {
+                            state = {};
+                        })
                     });
                 };
 
@@ -118,7 +134,8 @@
                     }
                     sdk.init().then(function() {
                         if (!sdk.isAnonymousSession()) {
-                            sdk.logoutUser().then(function() {
+                            sdk.logoutUser();
+                            sdk.startAnonymousSession().then(function() {
                                 state = {};
                             });
                         }
@@ -130,7 +147,8 @@
                         if (sdk.isAnonymousSession()) {
                             sdk.logoutUser();
                         }
-                        sdk.logoutUser().then(function() {
+                        sdk.logoutUser();
+                        sdk.startAnonymousSession().then(function() {
                             state = {};
                         });
                     });
@@ -176,8 +194,13 @@
                     override(data,pluginDefault);
                 }.bind(this));
             }
+
+            if (!sdk.getCurrentUser()) {
+                return sdk.startAnonymousSession();
+            }
+        }.bind(this)).then(function() {
             done();
-        }.bind(this));
+        });
     };
 
     plugin.teardown = function() {
