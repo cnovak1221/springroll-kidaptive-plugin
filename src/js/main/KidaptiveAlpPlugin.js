@@ -183,6 +183,7 @@
                             additionalFields[k] = additionalFields[k].toString();
                         }
                     }
+                    additionalFields.session_id = data.game_session;
                     additionalFields.springroll_game_id = data.game_id;
                     additionalFields.springroll_event_id = data.event_id;
                     additionalFields.springroll_event_code = additionalFields.event_code;

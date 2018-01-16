@@ -23,7 +23,7 @@
     "src"
   ],
   "dependencies": {
-    "springroll-pbskids": "https://projects.pbs.org/bitbucket/scm/sd/springroll-pbskids.git#^0.2.5",
+    "springroll-pbskids": "https://projects.pbs.org/bitbucket/scm/sd/springroll-pbskids.git#^0.2.10",
     "kidaptive-sdk-js": "^0.2.15",
     "bellhop": "^1.2.0"
   },
