@@ -160,6 +160,8 @@
                   this.container.on('openIdAuthFailure', authFail);
                   this.container.on('openIdRefreshAuthFailure', authFail);
                   this.container.on('openIdAllLogoutsComplete', logout);
+
+                  this.container.send('logoutCreateShadowAccountAuthorize');
               }
 
               //if Learning Module exists, turn learningEvents into behavior events
