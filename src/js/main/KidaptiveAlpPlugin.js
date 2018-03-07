@@ -204,6 +204,9 @@
               }
           }.bind(this)).then(function() {
               done();
+          }).catch(function(e) {
+            console.error('Kidaptive ALP failed to initialize', e);
+            done();
           });
         }.bind(this));
     };
@@ -229,7 +232,7 @@
 
       // since we're in a container, attempt to fetch configuration from outside.
       // However, we'll provide a timeout just in case the container's not listening
-      var MAX_WAIT_TIME = 1000;
+      var MAX_WAIT_TIME = 50;
       var successState = null;
       var timeout = setTimeout(function() {
         if(successState !== null) {
