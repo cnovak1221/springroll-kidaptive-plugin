@@ -204,6 +204,9 @@
               }
           }.bind(this)).then(function() {
               done();
+          }).catch(function(e) {
+            console.error('Kidaptive ALP failed to initialize', e);
+            done();
           });
         }.bind(this));
     };
