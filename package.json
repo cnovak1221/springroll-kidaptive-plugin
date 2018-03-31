@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/Kidapt/springroll-kidaptive-plugin#readme",
   "devDependencies": {
+    "bower": "^1.8.4",
     "uglify-js": "^3.0.28"
   }
 }
