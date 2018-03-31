@@ -197,7 +197,7 @@
                   }.bind(this));
               }
 
-              if (!sdk.getCurrentUser()) {
+              if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
                   return sdk.startAnonymousSession();
               }
           }.bind(this)).then(function() {
