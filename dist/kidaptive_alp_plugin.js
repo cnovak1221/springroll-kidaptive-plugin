@@ -8,7 +8,10 @@
     plugin.preload = function(done) {
         //cascading dynamic value resolver.
         var resolveValue = function(value, context) {
-            return (value instanceof Function && value.bind(this)(context)) || value;
+            if (value instanceof Function) {
+                return value.bind(this)(context)
+            }
+            return value;
         }.bind(this);
 
         //resolve init options. this.options takes precedence over this.config
