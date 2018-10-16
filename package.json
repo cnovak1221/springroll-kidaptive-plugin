@@ -1,6 +1,6 @@
 {
   "name": "springroll-kidaptive-plugin",
-  "version": "0.2.22",
+  "version": "0.2.23",
   "description": "Springroll plugin for Kidaptive ALP",
   "main": "./dist/kidaptive_alp_plugin.js",
   "scripts": {
