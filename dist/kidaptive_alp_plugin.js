@@ -168,7 +168,7 @@
               //if Learning Module exists, turn learningEvents into behavior events
               if (this.learning) {
                   //the default event converter
-                  var pluginDefault = function(data) {
+                  var defaultEvent = function(data) {
                       if (!sdk.getCurrentUser()) {
                           return;
                       }
@@ -192,11 +192,18 @@
                       additionalFields.springroll_event_id = data.event_id;
                       additionalFields.springroll_event_code = additionalFields.event_code;
                       delete additionalFields.event_code;
-                      sdk.reportBehavior(eventName,args);
+                      return {
+                          eventName: eventName,
+                          args: args
+                      }
                   };
-                  var override = (eventOverride || pluginDefault).bind(this);
+                  var reportDefault = function(data) {
+                      var de = defaultEvent(data);
+                      sdk.reportBehavior(de.eventName,de.args);
+                  };
+                  var override = (eventOverride || reportDefault).bind(this);
                   this.learning.on("learningEvent", function(data) {
-                      override(data,pluginDefault);
+                      override(data,reportDefault,defaultEvent);
                   }.bind(this));
               }
 
@@ -216,7 +223,7 @@
         this.alpPlugin.sdk.destroy().then(function() {
             delete this.alpPlugin;
         }.bind(this));
-    }
+    };
 
     /**
      * Attempts to request ALP configuration from the outer container. However, will timeout if
