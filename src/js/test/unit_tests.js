@@ -254,7 +254,50 @@ describe("Springroll ALP Plugin Tests", function() {
                     try {
                         override.calledOnce.should.true();
                         override.firstCall.args[0].should.equal(event);
+                        var reportDefault = override.firstCall.args[1];
+                        var defaultEvent = override.firstCall.args[2];
+                        reportDefault.should.Function();
+                        defaultEvent.should.Function();
+                        sinon.spy(reportDefault);
+                        sinon.spy(defaultEvent);
                         override.firstCall.thisValue.should.equal(app);
+
+                        var de = defaultEvent(event);
+
+                        de.should.size(2);
+                        de.should.properties({
+                            eventName: 'EVENT_NAME'
+                        });
+                        de.should.property('args');
+
+                        de.args.should.size(4);
+                        de.args.should.properties({
+                            learnerId: 'LEARNER',
+                            gameUri: GAME_URI,
+                            duration: 2.345
+                        });
+                        de.args.should.property('additionalFields');
+
+                        de.args.additionalFields.should.size(11);
+                        de.args.additionalFields.should.properties({
+                            boolean_field: 'true',
+                            number_field: '3',
+                            string_field: 'asdf',
+                            array_field: '[]',
+                            object_field: '{}',
+                            springroll_event_id: 'SPRINGROLL_EVENT_ID',
+                            springroll_game_id: 'SPRINGROLL_GAME_ID',
+                            springroll_event_code: '1234'
+                        });
+                        de.args.additionalFields.should.property('game_time');
+                        de.args.additionalFields.should.property('event_count');
+                        de.args.additionalFields.should.property('session_id');
+
+                        reportDefault(event);
+                        var calls = sdkStub.reportBehavior.getCalls();
+                        calls.length.should.eql(1);
+                        calls[0].args.should.eql([de.eventName, de.args]);
+
                         done();
                     } catch (e) {
                         done(e);
