@@ -81,8 +81,19 @@ describe("Springroll ALP Plugin Tests", function() {
 
     it("initialization", function(done) {
         testWithOptions(function() {
-            KidaptiveSdk.init.calledOnce.should.true();
-            KidaptiveSdk.init.calledWithExactly(API_KEY, VERSION, OPTIONS).should.true();
+            var calls = KidaptiveSdk.init.getCalls();
+            calls.length.should.eql(1);
+            calls[0].args.slice(0,2).should.eql([API_KEY,VERSION]);
+
+            var options = KidaptiveSdk.KidaptiveUtils.copyObject(calls[0].args[2], true);
+            var afc = options.autoFlushCallbacks;
+
+            delete options['autoFlushCallbacks'];
+            options.should.eql(OPTIONS);
+
+            afc.length.should.eql(1);
+            afc[0].should.Function();
+
             app.should.property('alpPlugin');
             app.alpPlugin.should.property('sdk', sdkStub);
             app.alpPlugin.should.property('getRecommendation').Function();
@@ -213,7 +224,8 @@ describe("Springroll ALP Plugin Tests", function() {
                         });
                         additionalFields.should.property('game_time');
                         additionalFields.should.property('event_count');
-                        additionalFields.should.size(10);
+                        additionalFields.should.property('session_id');
+                        additionalFields.should.size(11);
 
                         done();
                     } catch (e) {
