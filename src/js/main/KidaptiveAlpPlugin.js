@@ -199,7 +199,9 @@
                   };
                   var reportDefault = function(data) {
                       var de = defaultEvent(data);
-                      sdk.reportBehavior(de.eventName,de.args);
+                      if (de) {
+                          sdk.reportBehavior(de.eventName,de.args);
+                      }
                   };
                   var override = (eventOverride || reportDefault).bind(this);
                   this.learning.on("learningEvent", function(data) {
