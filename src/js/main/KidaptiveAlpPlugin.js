@@ -175,7 +175,7 @@
                       var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
                       var additionalFields = sdk.KidaptiveUtils.copyObject(data.event_data);
                       var args = {additionalFields: additionalFields};
-                      args.gameUri = gameUri;
+                      args.gameURI = gameUri;
                       args.learnerId = sdk.getLearnerList()[0].id;
                       for (var k in additionalFields) {
                           if (k === 'duration' && typeof(additionalFields[k]) === 'number') {
