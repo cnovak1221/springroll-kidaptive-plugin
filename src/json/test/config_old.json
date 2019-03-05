@@ -54,30 +54,5 @@
       "dev": true,
       "sdkOption": "SDK_OPTION"
     }
-  },
-  "alpEnvs": {
-    "dev": {
-      "apiKey": "CONFIG_DEV_API_KEY",
-      "version": {
-        "version": "CONFIG_DEV_VERSION",
-        "build": "CONFIG_DEV_BUILD"
-      },
-      "gameUri": "CONFIG_DEV_GAME_URI",
-      "options": {
-        "dev": true,
-        "sdkOption": "CONFIG_DEV_SDK_OPTION"
-      }
-    },
-    "prod": {
-      "apiKey": "CONFIG_PROD_API_KEY",
-      "version": {
-        "version": "CONFIG_PROD_VERSION",
-        "build": "CONFIG_PROD_BUILD"
-      },
-      "gameUri": "CONFIG_PROD_GAME_URI",
-      "options": {
-        "sdkOption": "CONFIG_PROD_SDK_OPTION"
-      }
-    }
   }
 }

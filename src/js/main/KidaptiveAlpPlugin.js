@@ -1,9 +1,13 @@
 /**
  * Created by solomonliu on 11/29/16.
  */
+KidaptiveAlpPlugin = new springroll.ApplicationPlugin();
+KidaptiveAlpPlugin.getReleaseStatus = function(app) {
+    return app && app.playOptions && app.playOptions.release;
+};
 (function() {
     "use strict";
-    var plugin = new springroll.ApplicationPlugin();
+    var plugin = KidaptiveAlpPlugin;
 
     plugin.preload = function(done) {
         //cascading dynamic value resolver.
@@ -31,194 +35,220 @@
             });
         };
 
-        if (this.config.alp) {
+        var alpEnv = KidaptiveAlpPlugin.getReleaseStatus(this) ? 'prod' : 'dev';
+        var allowContainerEnvOverride = true;
+        var warnDeprecation = false;
+
+        if (this.config.alpEnvs && this.config.alpEnvs[alpEnv]) {
+            fillInit(this.config.alpEnvs[alpEnv]);
+            allowContainerEnvOverride = false;
+        } else if (this.config.alp) {
             fillInit(this.config.alp);
+            warnDeprecation = true;
         }
 
-        if (this.options.alp) {
-            fillInit(this.options.alp)
+        if (this.options.alpEnvs && this.options.alpEnvs[alpEnv]) {
+            fillInit(this.options.alpEnvs[alpEnv]);
+            allowContainerEnvOverride = false;
+        } else if (this.options.alp) {
+            fillInit(this.options.alp);
+            warnDeprecation = true;
         }
 
-        resolveConfigurationFromContainer(this.container, initOptions, function(options) {
-          var recType = options.recType;
-          var recParams = options.recParams;
-          var recCallback = options.recCallback;
-          var gameUri = options.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
-          var eventOverride = options.eventOverride;
-          var specDict = this.learning.catalog.events || {};
+        if (warnDeprecation) {
+            console.warn("app.config.alp and app.options.alp are deprecated and may be removed in a future release. Use app.config.alpEnvs and app.options.alpEnvs instead");
+        }
 
-          var sdkOptions = KidaptiveSdk.KidaptiveUtils.copyObject(options.options) || {};
-          sdkOptions.autoFlushCallbacks = sdkOptions.autoFlushCallbacks || [];
-          sdkOptions.autoFlushCallbacks.splice(0,0,function(promise) {
-              promise.then(function() {
-                  if (!KidaptiveSdk.getCurrentUser() && !KidaptiveSdk.isAnonymousSession()) {
-                      KidaptiveSdk.startAnonymousSession();
-                  }
-              });
-          });
+        if (warnDeprecation && !allowContainerEnvOverride) {
+            console.warn("mixed usage of alp and alpEnv detected. alp_config will NOT be fetched from container");
+        }
 
-          KidaptiveSdk.init(options.apiKey, options.version, sdkOptions).then(function(sdk) {
-              var state = {};
+        var initWithOptions = function(options) {
+            var recType = options.recType;
+            var recParams = options.recParams;
+            var recCallback = options.recCallback;
+            var gameUri = options.gameUri; //TODO: function passing in springroll_game_id and returning game_uri
+            var eventOverride = options.eventOverride;
+            var specDict = this.learning.catalog.events || {};
 
-              this.alpPlugin = {
-                  sdk: sdk,
-                  getRecommendation: function(context) { //recommendations
-                      var type = sdk.KidaptiveUtils.copyObject(resolveValue(recType, context) || 'optimalDifficulty');
-                      var params = sdk.KidaptiveUtils.copyObject(resolveValue(recParams, context)) || {};
-                      params.learnerId = sdk.getLearnerList()[0].id;
-                      params.game = gameUri;
-                      var rec;
-                      switch(type) {
-                          case 'random':
-                              rec = sdk.getRandomRecommendations(params);
-                              break;
-                          case 'optimalDifficulty':
-                              rec = sdk.getOptimalDifficultyRecommendations(params);
-                              break;
-                          default:
-                              rec = sdk.getRecommendations(type, params);
-                      }
-                      return recCallback ? recCallback.bind(this)(rec, context) : rec;
-                  }.bind(this),
+            var sdkOptions = KidaptiveSdk.KidaptiveUtils.copyObject(options.options) || {};
+            sdkOptions.autoFlushCallbacks = sdkOptions.autoFlushCallbacks || [];
+            sdkOptions.autoFlushCallbacks.splice(0,0,function(promise) {
+                promise.then(function() {
+                    if (!KidaptiveSdk.getCurrentUser() && !KidaptiveSdk.isAnonymousSession()) {
+                        KidaptiveSdk.startAnonymousSession();
+                    }
+                });
+            });
 
-                  //functions for getting and setting state information.
-                  getState: function() {
-                      return sdk.KidaptiveUtils.copyObject(state);
-                  },
-                  setState: function(newState) {
-                      //delete keys marked undefined
-                      Object.keys(newState).forEach(function(key) {
-                          if (newState[key] === undefined) {
-                              delete state[key];
-                          }
-                      });
-                      //merge new state
-                      newState = sdk.KidaptiveUtils.copyObject(newState);
-                      Object.keys(newState).forEach(function(key) {
-                          state[key] = newState[key];
-                      });
-                  },
-                  getInitParams: function() {
-                      return KidaptiveSdk.KidaptiveUtils.copyObject(options, true);
-                  }
-              };
+            KidaptiveSdk.init(options.apiKey, options.version, sdkOptions).then(function(sdk) {
+                var state = {};
 
-              //if using oidc auth, listen for login state changes
-              if (!options.options.noOidc && this.container) {
-                  var authSuccess = function(event) {
-                      if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
-                          return;
-                      }
-                      var userId;
-                      sdk.init().then(function() {
-                          userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
-                          if (sdk.isAnonymousSession()) {
-                              sdk.logoutUser();
-                          }
-                          return sdk.refresh();
-                      }).then(function() {
-                          var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
-                          if (!newUserId) {
-                              throw new Error();
-                          }
-                          if (newUserId !== userId) {
-                              state = {};
-                          }
-                      }).catch(function() {
-                          sdk.logoutUser();
-                          sdk.startAnonymousSession().then(function() {
-                              state = {};
-                          })
-                      });
-                  };
+                this.alpPlugin = {
+                    sdk: sdk,
+                    getRecommendation: function(context) { //recommendations
+                        var type = sdk.KidaptiveUtils.copyObject(resolveValue(recType, context) || 'optimalDifficulty');
+                        var params = sdk.KidaptiveUtils.copyObject(resolveValue(recParams, context)) || {};
+                        params.learnerId = sdk.getLearnerList()[0].id;
+                        params.game = gameUri;
+                        var rec;
+                        switch(type) {
+                            case 'random':
+                                rec = sdk.getRandomRecommendations(params);
+                                break;
+                            case 'optimalDifficulty':
+                                rec = sdk.getOptimalDifficultyRecommendations(params);
+                                break;
+                            default:
+                                rec = sdk.getRecommendations(type, params);
+                        }
+                        return recCallback ? recCallback.bind(this)(rec, context) : rec;
+                    }.bind(this),
 
-                  var authFail = function(event) {
-                      if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
-                          return;
-                      }
-                      sdk.init().then(function() {
-                          if (!sdk.isAnonymousSession()) {
-                              sdk.logoutUser();
-                              sdk.startAnonymousSession().then(function() {
-                                  state = {};
-                              });
-                          }
-                      });
-                  };
+                    //functions for getting and setting state information.
+                    getState: function() {
+                        return sdk.KidaptiveUtils.copyObject(state);
+                    },
+                    setState: function(newState) {
+                        //delete keys marked undefined
+                        Object.keys(newState).forEach(function(key) {
+                            if (newState[key] === undefined) {
+                                delete state[key];
+                            }
+                        });
+                        //merge new state
+                        newState = sdk.KidaptiveUtils.copyObject(newState);
+                        Object.keys(newState).forEach(function(key) {
+                            state[key] = newState[key];
+                        });
+                    },
+                    getInitParams: function() {
+                        return KidaptiveSdk.KidaptiveUtils.copyObject(options, true);
+                    }
+                };
 
-                  var logout = function() {
-                      sdk.init().then(function() {
-                          if (sdk.isAnonymousSession()) {
-                              sdk.logoutUser();
-                          }
-                          sdk.logoutUser();
-                          sdk.startAnonymousSession().then(function() {
-                              state = {};
-                          });
-                      });
-                  };
+                //if using oidc auth, listen for login state changes
+                if (!options.options.noOidc && this.container) {
+                    var authSuccess = function(event) {
+                        if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
+                            return;
+                        }
+                        var userId;
+                        sdk.init().then(function() {
+                            userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                            if (sdk.isAnonymousSession()) {
+                                sdk.logoutUser();
+                            }
+                            return sdk.refresh();
+                        }).then(function() {
+                            var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
+                            if (!newUserId) {
+                                throw new Error();
+                            }
+                            if (newUserId !== userId) {
+                                state = {};
+                            }
+                        }).catch(function() {
+                            sdk.logoutUser();
+                            sdk.startAnonymousSession().then(function() {
+                                state = {};
+                            })
+                        });
+                    };
 
-                  this.container.on('openIdAuthSuccess', authSuccess);
-                  this.container.on('openIdRefreshAuthSuccess', authSuccess);
-                  this.container.on('openIdAuthFailure', authFail);
-                  this.container.on('openIdRefreshAuthFailure', authFail);
-                  this.container.on('openIdAllLogoutsComplete', logout);
-              }
+                    var authFail = function(event) {
+                        if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
+                            return;
+                        }
+                        sdk.init().then(function() {
+                            if (!sdk.isAnonymousSession()) {
+                                sdk.logoutUser();
+                                sdk.startAnonymousSession().then(function() {
+                                    state = {};
+                                });
+                            }
+                        });
+                    };
 
-              //if Learning Module exists, turn learningEvents into behavior events
-              if (this.learning) {
-                  //the default event converter
-                  var defaultEvent = function(data) {
-                      if (!sdk.getCurrentUser()) {
-                          return;
-                      }
-                      var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
-                      var additionalFields = sdk.KidaptiveUtils.copyObject(data.event_data);
-                      var args = {additionalFields: additionalFields};
-                      args.gameURI = gameUri;
-                      args.learnerId = sdk.getLearnerList()[0].id;
-                      for (var k in additionalFields) {
-                          if (k === 'duration' && typeof(additionalFields[k]) === 'number') {
-                              args[k] = additionalFields[k] / 1000; //learningEvents report duration in milliseconds
-                              delete additionalFields[k];
-                          } else if (additionalFields[k] instanceof Object) {
-                              additionalFields[k] = sdk.KidaptiveUtils.toJson(additionalFields[k]); //turn nested objects into json
-                          } else {
-                              additionalFields[k] = additionalFields[k].toString();
-                          }
-                      }
-                      additionalFields.session_id = data.game_session;
-                      additionalFields.springroll_game_id = data.game_id;
-                      additionalFields.springroll_event_id = data.event_id;
-                      additionalFields.springroll_event_code = additionalFields.event_code;
-                      delete additionalFields.event_code;
-                      return {
-                          eventName: eventName,
-                          args: args
-                      }
-                  };
-                  var reportDefault = function(data) {
-                      var de = defaultEvent(data);
-                      if (de) {
-                          sdk.reportBehavior(de.eventName,de.args);
-                      }
-                  };
-                  var override = (eventOverride || reportDefault).bind(this);
-                  this.learning.on("learningEvent", function(data) {
-                      override(data,reportDefault,defaultEvent);
-                  }.bind(this));
-              }
+                    var logout = function() {
+                        sdk.init().then(function() {
+                            if (sdk.isAnonymousSession()) {
+                                sdk.logoutUser();
+                            }
+                            sdk.logoutUser();
+                            sdk.startAnonymousSession().then(function() {
+                                state = {};
+                            });
+                        });
+                    };
 
-              if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
-                  return sdk.startAnonymousSession();
-              }
-          }.bind(this)).then(function() {
-              done();
-          }).catch(function(e) {
-            console.error('Kidaptive ALP failed to initialize', e);
-            done();
-          });
-        }.bind(this));
+                    this.container.on('openIdAuthSuccess', authSuccess);
+                    this.container.on('openIdRefreshAuthSuccess', authSuccess);
+                    this.container.on('openIdAuthFailure', authFail);
+                    this.container.on('openIdRefreshAuthFailure', authFail);
+                    this.container.on('openIdAllLogoutsComplete', logout);
+                }
+
+                //if Learning Module exists, turn learningEvents into behavior events
+                if (this.learning) {
+                    //the default event converter
+                    var defaultEvent = function(data) {
+                        if (!sdk.getCurrentUser()) {
+                            return;
+                        }
+                        var eventName = specDict[data.event_data.event_code] || 'Springroll Event';
+                        var additionalFields = sdk.KidaptiveUtils.copyObject(data.event_data);
+                        var args = {additionalFields: additionalFields};
+                        args.gameURI = gameUri;
+                        args.learnerId = sdk.getLearnerList()[0].id;
+                        for (var k in additionalFields) {
+                            if (k === 'duration' && typeof(additionalFields[k]) === 'number') {
+                                args[k] = additionalFields[k] / 1000; //learningEvents report duration in milliseconds
+                                delete additionalFields[k];
+                            } else if (additionalFields[k] instanceof Object) {
+                                additionalFields[k] = sdk.KidaptiveUtils.toJson(additionalFields[k]); //turn nested objects into json
+                            } else {
+                                additionalFields[k] = additionalFields[k].toString();
+                            }
+                        }
+                        additionalFields.session_id = data.game_session;
+                        additionalFields.springroll_game_id = data.game_id;
+                        additionalFields.springroll_event_id = data.event_id;
+                        additionalFields.springroll_event_code = additionalFields.event_code;
+                        delete additionalFields.event_code;
+                        return {
+                            eventName: eventName,
+                            args: args
+                        }
+                    };
+                    var reportDefault = function(data) {
+                        var de = defaultEvent(data);
+                        if (de) {
+                            sdk.reportBehavior(de.eventName,de.args);
+                        }
+                    };
+                    var override = (eventOverride || reportDefault).bind(this);
+                    this.learning.on("learningEvent", function(data) {
+                        override(data,reportDefault,defaultEvent);
+                    }.bind(this));
+                }
+
+                if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
+                    return sdk.startAnonymousSession();
+                }
+            }.bind(this)).then(function() {
+                done();
+            }).catch(function(e) {
+                console.error('Kidaptive ALP failed to initialize', e);
+                done();
+            });
+        }.bind(this);
+
+        if (allowContainerEnvOverride) {
+            resolveConfigurationFromContainer(this.container, initOptions, initWithOptions);
+        } else {
+            initWithOptions(initOptions);
+        }
     };
 
     plugin.teardown = function() {

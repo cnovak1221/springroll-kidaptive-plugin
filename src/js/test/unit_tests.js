@@ -12,7 +12,8 @@ var OPTIONS = {
     sdkOption: 'SDK_OPTION'
 };
 
-var CONFIG_PATH = '../../json/test/config.json';
+var CONFIG_PATH_OLD = '../../json/test/config_old.json';
+var CONFIG_PATH = "../../json/test/config.json";
 
 var OTHER_REC = 'OTHER_REC';
 
@@ -25,17 +26,17 @@ var LEARNER_LIST = [{
 var app;
 describe("Springroll ALP Plugin Tests", function() {
     var Application = include("springroll.Application");
-    var Learning = include("springroll.pbskids.Learning");
 
     //stub SDK
     var sdkStub = sinon.stub(KidaptiveSdk);
+    var releaseStatusStub = sinon.stub(KidaptiveAlpPlugin,'getReleaseStatus');
 
     //helper for initializing app and running tests after app init
     var testWithOptions = function(tests, done, options) {
         done = done || function(){};
         app = new Application(options || {
                 name: "ALP Plugin Test",
-                configPath: CONFIG_PATH
+                configPath: CONFIG_PATH_OLD
             });
         app.on('init', function() {
             try {
@@ -56,6 +57,7 @@ describe("Springroll ALP Plugin Tests", function() {
         sdkStub.logoutUser.resolves();
         sdkStub.startAnonymousSession.resolves();
         sdkStub.destroy.resolves();
+        releaseStatusStub.returns(undefined);
     });
 
     afterEach(function(done) {
@@ -79,7 +81,7 @@ describe("Springroll ALP Plugin Tests", function() {
         wait();
     });
 
-    it("initialization", function(done) {
+    it("initialization - deprecated config", function(done) {
         testWithOptions(function() {
             var calls = KidaptiveSdk.init.getCalls();
             calls.length.should.eql(1);
@@ -102,7 +104,67 @@ describe("Springroll ALP Plugin Tests", function() {
         }, done);
     });
 
-    it("init with options", function(done) {
+    it("initialization dev", function(done) {
+        testWithOptions(function() {
+            var calls = KidaptiveSdk.init.getCalls();
+            calls.length.should.eql(1);
+            calls[0].args.slice(0,2).should.eql(["CONFIG_DEV_API_KEY",
+                {version:"CONFIG_DEV_VERSION",build:"CONFIG_DEV_BUILD"}]);
+
+            var options = KidaptiveSdk.KidaptiveUtils.copyObject(calls[0].args[2], true);
+            var afc = options.autoFlushCallbacks;
+
+            delete options['autoFlushCallbacks'];
+            options.should.eql({
+                dev:true,
+                sdkOption:"CONFIG_DEV_SDK_OPTION"
+            });
+
+            afc.length.should.eql(1);
+            afc[0].should.Function();
+
+            app.should.property('alpPlugin');
+            app.alpPlugin.should.property('sdk', sdkStub);
+            app.alpPlugin.should.property('getRecommendation').Function();
+            app.alpPlugin.should.property('getState').Function();
+            app.alpPlugin.should.property('setState').Function();
+        }, done, {
+            name: "ALP Plugin Test",
+            configPath: CONFIG_PATH
+        });
+    });
+
+    it("initialization prod", function(done) {
+        releaseStatusStub.returns(true);
+        testWithOptions(function() {
+            var calls = KidaptiveSdk.init.getCalls();
+            calls.length.should.eql(1);
+            calls[0].args.slice(0,2).should.eql(["CONFIG_PROD_API_KEY",
+                {version:"CONFIG_PROD_VERSION",build:"CONFIG_PROD_BUILD"}]);
+
+            var options = KidaptiveSdk.KidaptiveUtils.copyObject(calls[0].args[2], true);
+            var afc = options.autoFlushCallbacks;
+
+            delete options['autoFlushCallbacks'];
+            options.should.eql({
+                sdkOption:"CONFIG_PROD_SDK_OPTION"
+            });
+
+            afc.length.should.eql(1);
+            afc[0].should.Function();
+
+            app.should.property('alpPlugin');
+            app.alpPlugin.should.property('sdk', sdkStub);
+            app.alpPlugin.should.property('getRecommendation').Function();
+            app.alpPlugin.should.property('getState').Function();
+            app.alpPlugin.should.property('setState').Function();
+        }, done, {
+            name: "ALP Plugin Test",
+            configPath: CONFIG_PATH
+        });
+    });
+
+    it("init with options - deprecated", function(done) {
         var mergedSdkOptions = KidaptiveSdk.KidaptiveUtils.copyObject(OPTIONS);
         mergedSdkOptions.sdkOption = "OTHER_SDK_OPTION";
         testWithOptions(function() {
@@ -113,12 +175,76 @@ describe("Springroll ALP Plugin Tests", function() {
             app.alpPlugin.getInitParams().should.deepEqual(mergedOptions);
         }, done, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: "OTHER_API_KEY",
                 options: {
                     sdkOption: "OTHER_SDK_OPTION"
                 }
+            }
+        });
+    });
+
+    it("init with options", function(done) {
+        var mergedSdkOptions = {
+            dev: true,
+            sdkOption: "OPTION_DEV_SDK_OPTION"
+        };
+        var version = {
+            version: "OPTION_DEV_VERSION",
+            build: "OPTION_DEV_BUILD"
+        };
+        testWithOptions(function() {
+            KidaptiveSdk.init.calledWithExactly("OPTION_DEV_API_KEY", version, mergedSdkOptions);
+            var mergedOptions = {
+                apiKey: "OPTION_DEV_API_KEY",
+                version: version,
+                options: mergedSdkOptions,
+                gameUri: "OPTION_DEV_GAME_URI"
+            };
+            app.alpPlugin.getInitParams().should.deepEqual(mergedOptions);
+        }, done, {
+            name: "ALP Plugin Test",
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: "OPTION_DEV_API_KEY",
+                version: version,
+                options: {
+                    sdkOption: "OPTION_DEV_SDK_OPTION"
+                },
+                gameUri: "OPTION_DEV_GAME_URI"
+            }
+        });
+    });
+
+    it("init with options prod", function(done) {
+        releaseStatusStub.returns(true);
+        var mergedSdkOptions = {
+            sdkOption: "OPTION_PROD_SDK_OPTION"
+        };
+        var version = {
+            version: "OPTION_PROD_VERSION",
+            build: "OPTION_PROD_BUILD"
+        };
+        testWithOptions(function() {
+            KidaptiveSdk.init.calledWithExactly("OPTION_PROD_API_KEY", version, mergedSdkOptions);
+            var mergedOptions = {
+                apiKey: "OPTION_PROD_API_KEY",
+                version: version,
+                options: mergedSdkOptions,
+                gameUri: "OPTION_PROD_GAME_URI"
+            };
+            app.alpPlugin.getInitParams().should.deepEqual(mergedOptions);
+        }, done, {
+            name: "ALP Plugin Test",
+            configPath: CONFIG_PATH,
+            alp: {
+                apiKey: "OPTION_PROD_API_KEY",
+                version: version,
+                options: {
+                    sdkOption: "OPTION_PROD_SDK_OPTION"
+                },
+                gameUri: "OPTION_PROD_GAME_URI"
             }
         });
     });
@@ -205,7 +331,7 @@ describe("Springroll ALP Plugin Tests", function() {
                         var eventArgs = call.args[1];
                         eventArgs.should.properties({
                             learnerId: 'LEARNER',
-                            gameUri: GAME_URI,
+                            gameURI: GAME_URI,
                             duration: 2.345
                         });
                         eventArgs.should.property('additionalFields');
@@ -273,7 +399,7 @@ describe("Springroll ALP Plugin Tests", function() {
                         de.args.should.size(4);
                         de.args.should.properties({
                             learnerId: 'LEARNER',
-                            gameUri: GAME_URI,
+                            gameURI: GAME_URI,
                             duration: 2.345
                         });
                         de.args.should.property('additionalFields');
@@ -314,7 +440,7 @@ describe("Springroll ALP Plugin Tests", function() {
             },0);
         }, undefined, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: API_KEY,
                 version: VERSION,
@@ -334,7 +460,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[1].should.properties({game:GAME_URI, learnerId: 'LEARNER'}).size(2);
         }, done, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: API_KEY,
                 version: VERSION,
@@ -359,7 +485,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[1].should.properties({game:GAME_URI, learnerId: 'LEARNER'}).size(2);
         }, done, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: API_KEY,
                 version: VERSION,
@@ -379,7 +505,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[1].should.properties({param: 'value', game:GAME_URI, learnerId: 'LEARNER'}).size(3);
         }, done, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: API_KEY,
                 version: VERSION,
@@ -407,7 +533,7 @@ describe("Springroll ALP Plugin Tests", function() {
             call.args[1].should.properties({param: 'value', game:GAME_URI, learnerId: 'LEARNER'}).size(3);
         }, done, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: API_KEY,
                 version: VERSION,
@@ -431,7 +557,7 @@ describe("Springroll ALP Plugin Tests", function() {
             override.firstCall.thisValue.should.equal(app);
         }, done, {
             name: "ALP Plugin Test",
-            configPath: CONFIG_PATH,
+            configPath: CONFIG_PATH_OLD,
             alp: {
                 apiKey: API_KEY,
                 version: VERSION,
@@ -614,7 +740,7 @@ describe("Springroll ALP Plugin Tests", function() {
                 setTimeout(function() {
                     try {
                         sdkStub.refresh.calledOnce.should.true();
-                        sdkStub.logoutUser.called.should.false()
+                        sdkStub.logoutUser.called.should.false();
                         sdkStub.startAnonymousSession.called.should.false();
                         app.alpPlugin.getState().should.deepEqual({a:1});
                         done();
