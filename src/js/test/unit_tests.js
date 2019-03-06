@@ -81,7 +81,7 @@ describe("Springroll ALP Plugin Tests", function() {
         wait();
     });
 
-    it("initialization - deprecated config", function(done) {
+    it("initialization - deprecated", function(done) {
         testWithOptions(function() {
             var calls = KidaptiveSdk.init.getCalls();
             calls.length.should.eql(1);
@@ -206,13 +206,29 @@ describe("Springroll ALP Plugin Tests", function() {
         }, done, {
             name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
-            alp: {
-                apiKey: "OPTION_DEV_API_KEY",
-                version: version,
-                options: {
-                    sdkOption: "OPTION_DEV_SDK_OPTION"
+            alpEnvs: {
+                dev: {
+                    apiKey: "OPTION_DEV_API_KEY",
+                    version: {
+                        version: "OPTION_DEV_VERSION",
+                        build: "OPTION_DEV_BUILD"
+                    },
+                    options: {
+                        sdkOption: "OPTION_DEV_SDK_OPTION"
+                    },
+                    gameUri: "OPTION_DEV_GAME_URI"
                 },
-                gameUri: "OPTION_DEV_GAME_URI"
+                prod: {
+                    apiKey: "OPTION_PROD_API_KEY",
+                    version: {
+                        version: "OPTION_PROD_VERSION",
+                        build: "OPTION_PROD_BUILD"
+                    },
+                    options: {
+                        sdkOption: "OPTION_PROD_SDK_OPTION"
+                    },
+                    gameUri: "OPTION_PROD_GAME_URI"
+                }
             }
         });
     });
@@ -238,13 +254,29 @@ describe("Springroll ALP Plugin Tests", function() {
         }, done, {
             name: "ALP Plugin Test",
             configPath: CONFIG_PATH,
-            alp: {
-                apiKey: "OPTION_PROD_API_KEY",
-                version: version,
-                options: {
-                    sdkOption: "OPTION_PROD_SDK_OPTION"
+            alpEnvs: {
+                dev: {
+                    apiKey: "OPTION_DEV_API_KEY",
+                    version: {
+                        version: "OPTION_DEV_VERSION",
+                        build: "OPTION_DEV_BUILD"
+                    },
+                    options: {
+                        sdkOption: "OPTION_DEV_SDK_OPTION"
+                    },
+                    gameUri: "OPTION_DEV_GAME_URI"
                 },
-                gameUri: "OPTION_PROD_GAME_URI"
+                prod: {
+                    apiKey: "OPTION_PROD_API_KEY",
+                    version: {
+                        version: "OPTION_PROD_VERSION",
+                        build: "OPTION_PROD_BUILD"
+                    },
+                    options: {
+                        sdkOption: "OPTION_PROD_SDK_OPTION"
+                    },
+                    gameUri: "OPTION_PROD_GAME_URI"
+                }
             }
         });
     });
