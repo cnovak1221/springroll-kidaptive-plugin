@@ -75,7 +75,7 @@ KidaptiveAlpPlugin.getReleaseStatus = function(app) {
             sdkOptions.autoFlushCallbacks = sdkOptions.autoFlushCallbacks || [];
             sdkOptions.autoFlushCallbacks.splice(0,0,function(promise) {
                 promise.then(function() {
-                    if (!KidaptiveSdk.getCurrentUser() && !KidaptiveSdk.isAnonymousSession()) {
+                    if (!KidaptiveSdk.isAnonymousSession()) {
                         KidaptiveSdk.startAnonymousSession();
                     }
                 });
@@ -129,37 +129,8 @@ KidaptiveAlpPlugin.getReleaseStatus = function(app) {
 
                 //if using oidc auth, listen for login state changes
                 if (!options.options.noOidc && this.container) {
-                    var authSuccess = function(event) {
-                        if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
-                            return;
-                        }
-                        var userId;
-                        sdk.init().then(function() {
-                            userId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
-                            if (sdk.isAnonymousSession()) {
-                                sdk.logoutUser();
-                            }
-                            return sdk.refresh();
-                        }).then(function() {
-                            var newUserId = sdk.KidaptiveUtils.getObject(sdk.getCurrentUser(),'id');
-                            if (!newUserId) {
-                                throw new Error();
-                            }
-                            if (newUserId !== userId) {
-                                state = {};
-                            }
-                        }).catch(function() {
-                            sdk.logoutUser();
-                            sdk.startAnonymousSession().then(function() {
-                                state = {};
-                            })
-                        });
-                    };
-
-                    var authFail = function(event) {
-                        if (sdk.KidaptiveUtils.getObject(event, ['data','name']) !== 'Kidaptive ALP') {
-                            return;
-                        }
+                    var openIdOfflineSDKHandler = function(event) {
+                        console.warn('KidaptiveAlpPlugin is handling an openId event while using an offline-only SDK. Using an anonymous, local SDK session.');
                         sdk.init().then(function() {
                             if (!sdk.isAnonymousSession()) {
                                 sdk.logoutUser();
@@ -168,31 +139,20 @@ KidaptiveAlpPlugin.getReleaseStatus = function(app) {
                                 });
                             }
                         });
-                    };
+                    }
 
-                    var logout = function() {
-                        sdk.init().then(function() {
-                            if (sdk.isAnonymousSession()) {
-                                sdk.logoutUser();
-                            }
-                            sdk.logoutUser();
-                            sdk.startAnonymousSession().then(function() {
-                                state = {};
-                            });
-                        });
-                    };
-
-                    this.container.on('openIdAuthSuccess', authSuccess);
-                    this.container.on('openIdRefreshAuthSuccess', authSuccess);
-                    this.container.on('openIdAuthFailure', authFail);
-                    this.container.on('openIdRefreshAuthFailure', authFail);
-                    this.container.on('openIdAllLogoutsComplete', logout);
+                    this.container.on('openIdAuthSuccess', openIdOfflineSDKHandler);
+                    this.container.on('openIdRefreshAuthSuccess', openIdOfflineSDKHandler);
+                    this.container.on('openIdAuthFailure', openIdOfflineSDKHandler);
+                    this.container.on('openIdRefreshAuthFailure', openIdOfflineSDKHandler);
+                    this.container.on('openIdAllLogoutsComplete', openIdOfflineSDKHandler);
                 }
 
                 //if Learning Module exists, turn learningEvents into behavior events
                 if (this.learning) {
                     //the default event converter
                     var defaultEvent = function(data) {
+                        
                         if (!sdk.getCurrentUser()) {
                             return;
                         }
@@ -233,7 +193,7 @@ KidaptiveAlpPlugin.getReleaseStatus = function(app) {
                     }.bind(this));
                 }
 
-                if (!sdk.getCurrentUser() && !sdk.isAnonymousSession()) {
+                if (!sdk.isAnonymousSession()) {
                     return sdk.startAnonymousSession();
                 }
             }.bind(this)).then(function() {
